@@ -46,7 +46,10 @@ jobs:
     - name: Commit Markdown report to repository
       run: |
         mkdir -p docs/
-        mv BenchmarkDotNet.Artifacts/results/*.md docs/
-        git add docs/*.md
+        mv BenchmarkDotNet.Artifacts/results/*.md docs/ || echo "No markdown file found!"
+        git config --local user.name "github-actions[bot]"
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git add docs/*.md || echo "No markdown file to add!"
         git commit -m "Add benchmark markdown report"
         git push
+      continue-on-error: true # Avoid failing the pipeline if the markdown file is missing
