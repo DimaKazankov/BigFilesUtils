@@ -1,105 +1,150 @@
 # Load necessary libraries
 library(ggplot2)
-library(gridExtra)   # For arranging multiple plots
-library(reshape2)
-library(scales)      # For number formatting
+library(dplyr)
+library(tidyr)
+library(patchwork)  # For arranging multiple plots
+library(scales)     # For formatting
+
+# Install required packages if they are not installed
+packages <- c("ggplot2", "dplyr", "tidyr", "patchwork", "scales")
+install_if_missing <- function(p) {
+  if (!requireNamespace(p, quietly = TRUE)) {
+    install.packages(p, repos = "https://cloud.r-project.org/")
+  }
+}
+invisible(lapply(packages, install_if_missing))
 
 # Read the CSV file
-data <- read.csv("BenchmarkDotNet.Artifacts/results/FileGeneratorBenchmark-report.csv")
+data <- read.csv("BenchmarkDotNet.Artifacts/results/FileGeneratorBenchmark-report.csv", stringsAsFactors = FALSE)
 
 # Function to remove the "ns" suffix and convert to numeric
 clean_ns <- function(column) {
-  as.numeric(gsub(" ns", "", column))
+  as.numeric(sub(" ns", "", column))
 }
 
-# Apply the cleaning function to all relevant columns
-data$Min <- clean_ns(data$Min)
-data$Q1 <- clean_ns(data$Q1)
-data$Median <- clean_ns(data$Median)
-data$Mean <- clean_ns(data$Mean)
-data$Q3 <- clean_ns(data$Q3)
-data$Max <- clean_ns(data$Max)
-data$StdDev <- clean_ns(data$StdDev)
-
-# Convert times from nanoseconds to seconds
-data$MinSec <- data$Min / 1e9
-data$Q1Sec <- data$Q1 / 1e9
-data$MedianSec <- data$Median / 1e9
-data$MeanSec <- data$Mean / 1e9
-data$Q3Sec <- data$Q3 / 1e9
-data$MaxSec <- data$Max / 1e9
-data$StdDevSec <- data$StdDev / 1e9
-
-# Convert FileSizeInBytes to MB
-data$FileSizeMB <- data$FileSizeInBytes / (1024^2)
-
-# Convert FileSizeMB to factor for boxplot
-data$FileSizeMB_Factor <- factor(data$FileSizeMB, levels = sort(unique(data$FileSizeMB)))
-
-# Prepare data for boxplot
-boxplot_data <- data.frame(
-  FileSizeMB = data$FileSizeMB_Factor,
-  Min = data$MinSec,
-  Q1 = data$Q1Sec,
-  Median = data$MedianSec,
-  Q3 = data$Q3Sec,
-  Max = data$MaxSec
-)
-
-# Since we have summary statistics, we can use geom_boxplot with stat = "identity"
-p1 <- ggplot(boxplot_data, aes(x = FileSizeMB, ymin = Min, lower = Q1, middle = Median, upper = Q3, ymax = Max)) +
-  geom_boxplot(stat = "identity", fill = "steelblue") +
-  labs(title = "Execution Time Distribution",
-       x = "File Size (MB)",
-       y = "Time (seconds)") +
-  theme_minimal(base_size = 12) +
-  theme(
-    plot.title = element_text(size=14, face="bold", hjust=0.5),
-    axis.title.x = element_text(face="bold", size=12),
-    axis.title.y = element_text(face="bold", size=12)
+# Clean and prepare data
+data_clean <- data %>%
+  mutate(
+    Mean = clean_ns(Mean),
+    Min = clean_ns(Min),
+    Max = clean_ns(Max),
+    StdDev = clean_ns(StdDev),
+    Q1 = clean_ns(Q1),
+    Q3 = clean_ns(Q3),
+    Median = clean_ns(Median),
+    FileSizeBytes = as.numeric(FileSizeInBytes)
+  ) %>%
+  # Convert times to seconds
+  mutate(
+    MeanSec = Mean / 1e9,
+    MinSec = Min / 1e9,
+    MaxSec = Max / 1e9,
+    StdDevSec = StdDev / 1e9,
+    Q1Sec = Q1 / 1e9,
+    Q3Sec = Q3 / 1e9,
+    MedianSec = Median / 1e9
+  ) %>%
+  # Convert file sizes to appropriate units
+  mutate(
+    FileSizeValue = case_when(
+      FileSizeBytes >= 1024^3 ~ FileSizeBytes / 1024^3,
+      FileSizeBytes >= 1024^2 ~ FileSizeBytes / 1024^2,
+      FileSizeBytes >= 1024    ~ FileSizeBytes / 1024,
+      TRUE                     ~ FileSizeBytes
+    ),
+    FileSizeUnit = case_when(
+      FileSizeBytes >= 1024^3 ~ "GB",
+      FileSizeBytes >= 1024^2 ~ "MB",
+      FileSizeBytes >= 1024   ~ "KB",
+      TRUE                    ~ "B"
+    ),
+    FileSizeLabel = paste0(FileSizeValue, " ", FileSizeUnit)
   )
 
-# Prepare data for line plot with error bars
-plot_data <- data.frame(
-  FileSizeMB = data$FileSizeMB,
-  MeanSec = data$MeanSec,
-  StdDevSec = data$StdDevSec
-)
+# Ensure FileSizeLabel is a factor with the correct order
+data_clean$FileSizeLabel <- factor(data_clean$FileSizeLabel, levels = unique(data_clean$FileSizeLabel))
 
-# Line plot with error bars
-p2 <- ggplot(plot_data, aes(x = FileSizeMB, y = MeanSec)) +
+# Plot 1: Execution Time Distribution (Boxplot-like Visualization)
+p1 <- ggplot(data_clean, aes(x = FileSizeLabel)) +
+  geom_boxplot(
+    aes(
+      ymin = MinSec,
+      lower = Q1Sec,
+      middle = MedianSec,
+      upper = Q3Sec,
+      ymax = MaxSec
+    ),
+    stat = "identity",
+    fill = "lightblue"
+  ) +
+  labs(
+    title = "Execution Time Distribution",
+    x = "File Size",
+    y = "Time (seconds)"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5)
+  )
+
+# Plot 2: Mean Execution Time with Standard Deviation (Line Plot with Error Bars)
+p2 <- ggplot(data_clean, aes(x = FileSizeBytes, y = MeanSec)) +
   geom_line(color = "steelblue", size = 1) +
-  geom_point(color = "steelblue", size = 2) +
-  geom_errorbar(aes(ymin = MeanSec - StdDevSec, ymax = MeanSec + StdDevSec), width = 5, color = "orange") +
-  labs(title = "Mean Execution Time with Standard Deviation",
-       x = "File Size (MB)",
-       y = "Mean Time (seconds)") +
-  theme_minimal(base_size = 12) +
+  geom_point(color = "steelblue", size = 3) +
+  geom_errorbar(aes(ymin = MeanSec - StdDevSec, ymax = MeanSec + StdDevSec), width = 0, color = "orange") +
+  scale_x_continuous(
+    labels = function(x) {
+      case_when(
+        x >= 1024^3 ~ paste0(x / 1024^3, " GB"),
+        x >= 1024^2 ~ paste0(x / 1024^2, " MB"),
+        x >= 1024   ~ paste0(x / 1024, " KB"),
+        TRUE        ~ paste0(x, " B")
+      )
+    },
+    breaks = data_clean$FileSizeBytes
+  ) +
+  labs(
+    title = "Mean Execution Time with Standard Deviation",
+    x = "File Size",
+    y = "Mean Time (seconds)"
+  ) +
+  theme_minimal(base_size = 14) +
   theme(
-    plot.title = element_text(size=14, face="bold", hjust=0.5),
-    axis.title.x = element_text(face="bold", size=12),
-    axis.title.y = element_text(face="bold", size=12)
+    plot.title = element_text(face = "bold", hjust = 0.5)
   )
 
-# Throughput calculation
-data$ThroughputMBps <- data$FileSizeMB / data$MeanSec  # MB / sec
-
-# Throughput plot
-p3 <- ggplot(data, aes(x = FileSizeMB, y = ThroughputMBps)) +
-  geom_line(color = "green", size = 1) +
-  geom_point(color = "green", size = 2) +
-  labs(title = "Throughput vs File Size",
-       x = "File Size (MB)",
-       y = "Throughput (MB/s)") +
-  theme_minimal(base_size = 12) +
-  theme(
-    plot.title = element_text(size=14, face="bold", hjust=0.5),
-    axis.title.x = element_text(face="bold", size=12),
-    axis.title.y = element_text(face="bold", size=12)
+# Plot 3: Throughput vs File Size
+data_clean <- data_clean %>%
+  mutate(
+    ThroughputMBps = (FileSizeBytes / (1024^2)) / MeanSec  # MB per second
   )
 
-# Arrange all plots in one image
-combined_plot <- grid.arrange(p1, p2, p3, ncol = 1)
+p3 <- ggplot(data_clean, aes(x = FileSizeBytes, y = ThroughputMBps)) +
+  geom_line(color = "darkgreen", size = 1) +
+  geom_point(color = "darkgreen", size = 3) +
+  scale_x_continuous(
+    labels = function(x) {
+      case_when(
+        x >= 1024^3 ~ paste0(x / 1024^3, " GB"),
+        x >= 1024^2 ~ paste0(x / 1024^2, " MB"),
+        x >= 1024   ~ paste0(x / 1024, " KB"),
+        TRUE        ~ paste0(x, " B")
+      )
+    },
+    breaks = data_clean$FileSizeBytes
+  ) +
+  labs(
+    title = "Throughput vs File Size",
+    x = "File Size",
+    y = "Throughput (MB/s)"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5)
+  )
 
-# Save the combined plot as a PNG file
-ggsave("BenchmarkDotNet.Artifacts/results/FileGeneratorBenchmark-plot.png", plot = combined_plot, width = 8, height = 18, dpi = 300)
+# Combine plots using patchwork
+combined_plot <- p1 / p2 / p3 + plot_layout(ncol = 1)
+
+# Save the combined plot
+ggsave("BenchmarkDotNet.Artifacts/results/FileGeneratorBenchmark-plot.png", plot = combined_plot, width = 12, height = 18, dpi = 300)
