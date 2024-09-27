@@ -37,17 +37,17 @@ jobs:
 #    - name: Run Benchmark and Generate Markdown Report
 #      run: dotnet run --project ./src/BigFilesUtils/BigFilesUtils.csproj --configuration Release
       
-#    - name: Run Benchmarks
-#      run: dotnet "./publish/benchmarks_source.dll" -f "*"
+    - name: Run Benchmarks
+      run: dotnet "./publish/BigFilesUtils.dll" -f "*"
+
+    - name: Upload benchmark results
+      uses: actions/upload-artifact@v4.4.0
+      with:
+        name: benchmark_results
+        path: ./BenchmarkDotNet.Artifacts/results/*
 #      
-#    - name: Upload benchmark results
-#      uses: actions/upload-artifact@v4.4.0
-#      with:
-#        name: benchmark_results
-#        path: ./BenchmarkDotNet.Artifacts/results/*
-#      
-    - name: List results directory contents
-      run: ls ./publish
+#    - name: List results directory contents
+#      run: ls ./publish
 
 #    - name: Commit Markdown report to repository
 #      run: |
