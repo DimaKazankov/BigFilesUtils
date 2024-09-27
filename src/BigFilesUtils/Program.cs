@@ -15,7 +15,7 @@ public class FileGeneratorBenchmark
     private FileGenerator? _fileGenerator;
     private string? _fileName;
 
-    [Params(100 * 1024, 100 * 1024 * 1024, 100 * 1024L * 1024L * 1024L)]
+    [Params(100 * 1024, 100 * 1024 * 1024, 1024L * 1024L * 1024L, 10 * 1024L * 1024L * 1024L)]
     public long FileSizeInBytes { get; set; }
 
     [GlobalSetup]
