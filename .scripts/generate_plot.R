@@ -8,13 +8,18 @@ data <- read.csv("BenchmarkDotNet.Artifacts/results/FibonacciBenchmark-report.cs
 # Check the data structure for debugging
 print(head(data))
 
-# Remove the "ns" (nanoseconds) from the Mean, Min, Max, etc., columns and convert them to numeric
-data$Mean <- as.numeric(sub(" ns", "", data$Mean))
-data$Min <- as.numeric(sub(" ns", "", data$Min))
-data$Max <- as.numeric(sub(" ns", "", data$Max))
-data$Q1 <- as.numeric(sub(" ns", "", data$Q1))
-data$Q3 <- as.numeric(sub(" ns", "", data$Q3))
-data$Median <- as.numeric(sub(" ns", "", data$Median))
+# Function to remove the "ns" suffix and convert to numeric
+clean_ns <- function(column) {
+  as.numeric(gsub(" ns", "", column))
+}
+
+# Apply the cleaning function to all relevant columns
+data$Mean <- clean_ns(data$Mean)
+data$Min <- clean_ns(data$Min)
+data$Max <- clean_ns(data$Max)
+data$Q1 <- clean_ns(data$Q1)
+data$Q3 <- clean_ns(data$Q3)
+data$Median <- clean_ns(data$Median)
 
 # Select the necessary columns for plotting
 metrics <- data.frame(
