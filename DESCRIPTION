@@ -8,5 +8,4 @@ Imports:
     reshape2,
     gridExtra,
     scales
-
 License: MIT
