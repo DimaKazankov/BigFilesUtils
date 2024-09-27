@@ -23,6 +23,13 @@ jobs:
       uses: actions/setup-dotnet@v4.0.1
       with:
         dotnet-version: '8.0.402'
+        
+    - name: Setup R
+      uses: r-lib/actions/setup-r@v2
+      
+    - name: Install R packages
+      run: |
+        Rscript -e 'install.packages("ggplot2", repos="http://cran.rstudio.com")'
 
     - name: Restore dependencies
       run: dotnet restore
@@ -41,6 +48,10 @@ jobs:
       
     - name: Run Benchmarks
       run: dotnet "./publish/BigFilesUtils.dll" -f "*"
+      
+    - name: Run R script to generate plot
+      run: |
+        Rscript ./.scripts/generate_plot.R
 
     - name: Upload benchmark results
       uses: actions/upload-artifact@v4.4.0
