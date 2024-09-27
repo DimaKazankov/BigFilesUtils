@@ -11,22 +11,22 @@ BenchmarkSwitcher.FromAssembly(Assembly.GetExecutingAssembly()).Run(args);
 [MarkdownExporterAttribute.GitHub]
 [GcServer(true)]
 [ShortRunJob]
-public class FibonacciBenchmark
+public class FileGeneratorBenchmark
 {
-    private Fibonacci? _fibonacci;
+    private FileGenerator? _fileGenerator;
     
-    [Params(1, 2, 3, 5, 8, 13, 21, 34)]
-    public int Count { get; set; }
+    [Params(1024, 1024 * 1024)]
+    public int FileSizeInBytes { get; set; }
 
     [GlobalSetup]
     public void Setup()
     {
-        _fibonacci = new Fibonacci();
+        _fileGenerator = new FileGenerator();
     }
 
     [Benchmark]
-    public void Fibonacci()
+    public void GenerateFile()
     {
-        var list = _fibonacci!.GetFibonacci(Count).ToList();
+        _fileGenerator!.GenerateFile($"{FileSizeInBytes}_bytes_file_generator_benchmark.txt", FileSizeInBytes);
     }
 }

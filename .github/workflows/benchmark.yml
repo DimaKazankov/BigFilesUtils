@@ -68,7 +68,11 @@ jobs:
       
       # Build the project
       - name: Build the project
-        run: dotnet build --no-restore -c Release
+        run: dotnet build -c Release--no-restore
+        
+      # Test the project
+      - name: Test the project
+        run: dotnet test -c Release --no-build --verbosity normal
       
       # Publish the project
       - name: Publish
