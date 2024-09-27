@@ -10,14 +10,23 @@ BenchmarkSwitcher.FromAssembly(Assembly.GetExecutingAssembly()).Run(args);
 [RankColumn, MinColumn, MaxColumn, Q1Column, Q3Column, AllStatisticsColumn]
 [MarkdownExporterAttribute.GitHub]
 [GcServer(true)]
+[ShortRunJob]
 public class FibonacciBenchmark
 {
+    private Fibonacci? _fibonacci;
+    
     [Params(1, 2, 3, 5, 8, 13, 21, 34)]
     public int Count { get; set; }
+
+    [GlobalSetup]
+    public void Setup()
+    {
+        _fibonacci = new Fibonacci();
+    }
 
     [Benchmark]
     public void Fibonacci()
     {
-        var xs = new Fibonacci().GetFibonacci(Count).ToList();
+        var list = _fibonacci!.GetFibonacci(Count).ToList();
     }
 }

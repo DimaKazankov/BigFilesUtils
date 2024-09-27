@@ -1,13 +1,5 @@
-﻿using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Exporters.Csv;
+﻿namespace BigFilesUtils;
 
-namespace BigFilesUtils;
-
-[InProcess]
-[MemoryDiagnoser]
-[RankColumn, MinColumn, MaxColumn, Q1Column, Q3Column, AllStatisticsColumn]
-[MarkdownExporterAttribute.GitHub]
-[GcServer(true)]
 public class Fibonacci
 {
     public IEnumerable<int> GetFibonacci(int count)
