@@ -5,7 +5,6 @@ using BigFilesUtils;
 
 BenchmarkSwitcher.FromAssembly(Assembly.GetExecutingAssembly()).Run(args);
 
-[InProcess]
 [MemoryDiagnoser]
 [MinColumn, MaxColumn, MeanColumn, Q1Column, Q3Column, MedianColumn, StdDevColumn]
 [MarkdownExporterAttribute.GitHub]
