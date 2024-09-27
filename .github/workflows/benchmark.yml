@@ -33,9 +33,6 @@ jobs:
       with:
         name: benchmarks_source
         path: ./publish/*
-
-#    - name: Run Benchmark and Generate Markdown Report
-#      run: dotnet run --project ./src/BigFilesUtils/BigFilesUtils.csproj --configuration Release
       
     - name: Run Benchmarks
       run: dotnet "./publish/BigFilesUtils.dll" -f "*"
@@ -45,14 +42,11 @@ jobs:
       with:
         name: benchmark_results
         path: ./BenchmarkDotNet.Artifacts/results/*
-#      
-#    - name: List results directory contents
-#      run: ls ./publish
 
-#    - name: Commit Markdown report to repository
-#      run: |
-#        mkdir -p docs/
-#        mv BenchmarkDotNet.Artifacts/results/*.md docs/
-#        git add docs/*.md
-#        git commit -m "Add benchmark markdown report"
-#        git push
+    - name: Commit Markdown report to repository
+      run: |
+        mkdir -p docs/
+        mv BenchmarkDotNet.Artifacts/results/*.md docs/
+        git add docs/*.md
+        git commit -m "Add benchmark markdown report"
+        git push
