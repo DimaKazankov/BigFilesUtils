@@ -5,5 +5,8 @@ Version: 0.1.0
 Description: This project generates benchmark report plots using R.
 Imports:
     ggplot2,
-    reshape2
+    reshape2,
+    gridExtra,
+    scales
+
 License: MIT
