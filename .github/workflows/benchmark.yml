@@ -26,7 +26,7 @@ jobs:
       run: dotnet build --configuration Release
 
     - name: Run Benchmark and Generate Markdown Report
-      run: dotnet run --project src\BigFilesUtils\BigFilesUtils.csproj --configuration Release
+      run: dotnet run --project ./src/BigFilesUtils/BigFilesUtils.csproj --configuration Release
 
     - name: Commit Markdown report to repository
       run: |
