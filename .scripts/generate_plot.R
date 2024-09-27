@@ -5,9 +5,6 @@ library(reshape2)
 # Read the CSV file
 data <- read.csv("BenchmarkDotNet.Artifacts/results/FibonacciBenchmark-report.csv")
 
-# Check the data structure for debugging
-# print(head(data))
-
 # Function to remove the "ns" suffix and convert to numeric
 clean_ns <- function(column) {
   as.numeric(gsub(" ns", "", column))
@@ -35,7 +32,11 @@ metrics <- data.frame(
 # Melt the data for ggplot (long format for multiple metrics)
 metrics_melted <- melt(metrics, id.vars = 'Method', 
                        variable.name = 'Metric', value.name = 'Value')
-                       
+
+# Ensure the 'Value' column is numeric
+metrics_melted$Value <- as.numeric(metrics_melted$Value)
+
+# Print the first few rows for debugging
 print(head(metrics_melted))
 
 # Create a grouped bar chart showing different metrics for each method
@@ -55,4 +56,3 @@ p <- ggplot(metrics_melted, aes(x = Method, y = Value, fill = Metric)) +
 
 # Save the plot as a PNG file
 ggsave("BenchmarkDotNet.Artifacts/results/FibonacciBenchmark-plot.png", plot = p, width = 10, height = 6, dpi = 300)
-
