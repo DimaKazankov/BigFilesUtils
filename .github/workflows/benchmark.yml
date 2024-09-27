@@ -1,5 +1,8 @@
 name: Benchmark and Markdown Report
 
+permissions:
+  contents: write
+
 on:
   push:
     branches:
@@ -12,10 +15,12 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4.2.0
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4.0.1
       with:
         dotnet-version: '8.0.402'
 
