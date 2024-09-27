@@ -63,9 +63,11 @@ jobs:
       run: |
         mkdir -p docs/
         mv BenchmarkDotNet.Artifacts/results/*.md docs/ || echo "No markdown file found!"
+        mv BenchmarkDotNet.Artifacts/results/*.png docs/ || echo "No plot file found!"
         git config --local user.name "github-actions[bot]"
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git add docs/*.md || echo "No markdown file to add!"
-        git commit -m "Add benchmark markdown report"
+        git add docs/*.png || echo "No plot file to add!"
+        git commit -m "Add benchmark markdown report and plot"
         git push
-      continue-on-error: true # Avoid failing the pipeline if the markdown file is missing
+      continue-on-error: true

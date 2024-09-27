@@ -14,4 +14,4 @@ p <- ggplot(data, aes(x=Method, y=Mean)) +
      theme_minimal()
 
 # Save the plot as a PNG file
-ggsave("docs/FibonacciBenchmark-plot.png", plot = p)
+ggsave("BenchmarkDotNet.Artifacts/results/FibonacciBenchmark-plot.png", plot = p)
