@@ -2,7 +2,7 @@
 
 ## Benchmark Results
 
-You can view the latest benchmark results [here](docs/FibonacciBenchmark-report-github.md).
+You can view the latest benchmark results [here](docs/FileGeneratorBenchmark-report-github.md).
 
-![Benchmark Plot](docs/FibonacciBenchmark-plot.png)
+![Benchmark Plot](docs/FileGeneratorBenchmark-plot.png)
 
