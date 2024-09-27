@@ -27,11 +27,14 @@ jobs:
 
     - name: Run Benchmark and Generate Markdown Report
       run: dotnet run --project ./src/BigFilesUtils/BigFilesUtils.csproj --configuration Release
+      
+    - name: Run observe
+      run: ls
 
-    - name: Commit Markdown report to repository
-      run: |
-        mkdir -p docs/
-        mv BenchmarkDotNet.Artifacts/results/*.md docs/
-        git add docs/*.md
-        git commit -m "Add benchmark markdown report"
-        git push
+#    - name: Commit Markdown report to repository
+#      run: |
+#        mkdir -p docs/
+#        mv BenchmarkDotNet.Artifacts/results/*.md docs/
+#        git add docs/*.md
+#        git commit -m "Add benchmark markdown report"
+#        git push
