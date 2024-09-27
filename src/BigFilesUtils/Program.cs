@@ -7,7 +7,7 @@ BenchmarkSwitcher.FromAssembly(Assembly.GetExecutingAssembly()).Run(args);
 
 [InProcess]
 [MemoryDiagnoser]
-[RankColumn, MinColumn, MaxColumn, Q1Column, Q3Column, AllStatisticsColumn]
+[MinColumn, MaxColumn, MeanColumn, Q1Column, Q3Column, MedianColumn, StdDevColumn]
 [MarkdownExporterAttribute.GitHub]
 [GcServer(true)]
 [ShortRunJob]
