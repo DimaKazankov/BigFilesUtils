@@ -1,14 +1,3 @@
-# Big files utils
-
-## Benchmark Results
-
-
-<!-- BENCHMARK RESULTS START -->
-
-## Benchmark Results
-
-*Last updated on Sun Sep 29 12:05:56 UTC 2024 UTC*
-
 ```
 
 BenchmarkDotNet v0.14.0, Ubuntu 22.04.5 LTS (Jammy Jellyfish)
@@ -35,14 +24,3 @@ LaunchCount=5  UnrollFactor=1  WarmupCount=2
 | GenerateFile | 500.00 MB       | Buffered     | ?        |  5.4383 s | 0.1299 s | 0.1215 s | 0.0314 s | 5.1958 s |  5.6025 s |  5.4470 s | 5.3900 s |  5.5414 s | 0.1839 |    4 | 204666.6667 | 204666.6667 | 204666.6667 | 2501.46 MB |
 | GenerateFile | 500.00 MB       | Parallel     | ?        |  5.3126 s | 0.1565 s | 0.1464 s | 0.0378 s | 5.1372 s |  5.6537 s |  5.2432 s | 5.2252 s |  5.3883 s | 0.1882 |    4 |   7333.3333 |   4666.6667 |   2666.6667 | 1820.56 MB |
 | GenerateFile | 500.00 MB       | MemoryMapped | ?        |  5.6208 s | 0.1724 s | 0.1612 s | 0.0416 s | 5.1841 s |  5.8446 s |  5.5972 s | 5.5581 s |  5.7009 s | 0.1779 |    4 |  12333.3333 |           - |           - | 3962.74 MB |
-
-### Performance Barplot
-![Benchmark Barplot](docs/BigFilesUtils.Benchmark.FileGeneratorBenchmark-barplot.png)
-
-### Measurement Overhead Plot
-![Measurement Overhead Plot](docs/*-measurement.png)
-
-### Distribution Plot
-![Distribution Plot](docs/*-distribution.png)
-
-<!-- BENCHMARK RESULTS END -->
