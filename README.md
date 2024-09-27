@@ -6,3 +6,5 @@ You can view the latest benchmark results [here](docs/FileGeneratorBenchmark-rep
 
 ![Benchmark Plot](docs/FileGeneratorBenchmark-plot.png)
 
+<!-- BENCHMARK RESULTS START -->
+<!-- BENCHMARK RESULTS END -->
