@@ -1,0 +1,39 @@
+name: Benchmark and Markdown Report
+
+#on:
+#  push:
+#    branches:
+#      - main
+#  pull_request:
+#    branches:
+#      - main
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.402'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build the project
+      run: dotnet build --configuration Release
+
+    - name: Run Benchmark and Generate Markdown Report
+      run: dotnet run --project src\BigFilesUtils\BigFilesUtils.csproj --configuration Release
+
+    - name: Commit Markdown report to repository
+      run: |
+        mkdir -p docs/
+        mv BenchmarkDotNet.Artifacts/results/*.md docs/
+        git add docs/*.md
+        git commit -m "Add benchmark markdown report"
+        git push
