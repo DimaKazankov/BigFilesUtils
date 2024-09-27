@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BigFilesUtils", "src\BigFilesUtils\BigFilesUtils.csproj", "{436DACCE-6700-41EE-B856-FEF6C27818C9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BigFilesUtils.Tests", "src\BigFilesUtils.Tests\BigFilesUtils.Tests.csproj", "{1460D165-E5AD-4C75-BB86-CFF39FCE7DC7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{436DACCE-6700-41EE-B856-FEF6C27818C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{436DACCE-6700-41EE-B856-FEF6C27818C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{436DACCE-6700-41EE-B856-FEF6C27818C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1460D165-E5AD-4C75-BB86-CFF39FCE7DC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1460D165-E5AD-4C75-BB86-CFF39FCE7DC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1460D165-E5AD-4C75-BB86-CFF39FCE7DC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1460D165-E5AD-4C75-BB86-CFF39FCE7DC7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
