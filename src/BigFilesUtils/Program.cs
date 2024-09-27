@@ -1,17 +1,32 @@
-﻿using BigFilesUtils;
+using System.Reflection;
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Running;
+using BigFilesUtils;
 
-if (args.Length != 2)
+BenchmarkSwitcher.FromAssembly(Assembly.GetExecutingAssembly()).Run(args);
+
+[InProcess]
+[MemoryDiagnoser]
+[MinColumn, MaxColumn, MeanColumn, Q1Column, Q3Column, MedianColumn, StdDevColumn]
+[MarkdownExporterAttribute.GitHub]
+[GcServer(true)]
+[ShortRunJob]
+public class FibonacciBenchmark
 {
-    Console.WriteLine("Usage: FileGenerator <file_path> <file_size_in_bytes>");
-    return;
-}
+    private Fibonacci? _fibonacci;
+    
+    [Params(1, 2, 3, 5, 8, 13, 21, 34)]
+    public int Count { get; set; }
 
-var filePath = args[0];
-if (!long.TryParse(args[1], out var fileSizeInBytes))
-{
-    Console.WriteLine("Invalid file size.");
-    return;
-}
+    [GlobalSetup]
+    public void Setup()
+    {
+        _fibonacci = new Fibonacci();
+    }
 
-new FileGenerator().GenerateFile(filePath, fileSizeInBytes);
-Console.WriteLine("File generated successfully.");
+    [Benchmark]
+    public void Fibonacci()
+    {
+        var list = _fibonacci!.GetFibonacci(Count).ToList();
+    }
+}

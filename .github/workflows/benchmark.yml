@@ -1,0 +1,112 @@
+name: Benchmark Report
+
+permissions:
+  contents: write
+
+on:
+  push:
+    branches:
+      - "*"
+  workflow_dispatch:  # Allow manual triggering of the workflow
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      # Cache for .NET packages
+      - name: Cache .NET packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.nuget/packages
+            ~/.local/share/NuGet/Cache
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+      
+      # Setup .NET environment
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4.0.1
+        with:
+          dotnet-version: '8.0.402'
+      
+      # Setup R environment
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+      
+      # Restore cache for R packages (before installation)
+      - name: Restore R package cache
+        uses: actions/cache@v3
+        with:
+          path: ~/R/x86_64-pc-linux-gnu-library
+          key: ${{ runner.os }}-R-packages-${{ hashFiles('.scripts/generate_plot.R') }}
+          restore-keys: |
+            ${{ runner.os }}-R-packages-
+      
+      # Install R packages
+      - name: Install R packages
+        run: |
+          Rscript -e 'if (!require("ggplot2")) install.packages("ggplot2", repos="http://cran.rstudio.com")'
+          Rscript -e 'if (!require("reshape2")) install.packages("reshape2", repos="http://cran.rstudio.com")'
+
+      # Save R packages cache after installation
+      - name: Save R package cache
+        uses: actions/cache@v3
+        with:
+          path: ~/R/x86_64-pc-linux-gnu-library
+          key: ${{ runner.os }}-R-packages-${{ hashFiles('.scripts/generate_plot.R') }}
+      
+      # Restore .NET dependencies with caching
+      - name: Restore .NET dependencies
+        run: dotnet restore
+      
+      # Build the project
+      - name: Build the project
+        run: dotnet build --no-restore -c Release
+      
+      # Publish the project
+      - name: Publish
+        run: dotnet publish -c Release --verbosity normal -o ./publish/
+      
+      # Archive the published artifacts
+      - name: Archive
+        uses: actions/upload-artifact@v4.4.0
+        with:
+          name: benchmarks_source
+          path: ./publish/*
+      
+      # Run Benchmarks
+      - name: Run Benchmarks
+        run: dotnet "./publish/BigFilesUtils.dll" -f "*"
+      
+      # Run the R script to generate a plot
+      - name: Run R script to generate plot
+        run: |
+          Rscript ./.scripts/generate_plot.R
+      
+      # Upload benchmark results as artifacts
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4.4.0
+        with:
+          name: benchmark_results
+          path: ./BenchmarkDotNet.Artifacts/results/*
+      
+      # Commit Markdown report and plot to repository
+      - name: Commit Markdown report to repository
+        run: |
+          mkdir -p docs/
+          mv BenchmarkDotNet.Artifacts/results/*.md docs/ || echo "No markdown file found!"
+          mv BenchmarkDotNet.Artifacts/results/*.png docs/ || echo "No plot file found!"
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/*.md || echo "No markdown file to add!"
+          git add docs/*.png || echo "No plot file to add!"
+          git commit -m "Add benchmark markdown report and plot"
+          git push
+        continue-on-error: true
