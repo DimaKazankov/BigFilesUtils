@@ -8,6 +8,15 @@ data <- read.csv("BenchmarkDotNet.Artifacts/results/FibonacciBenchmark-report.cs
 # Check the data structure for debugging
 print(head(data))
 
+# Remove the "ns" (nanoseconds) from the Mean, Min, Max, etc., columns and convert them to numeric
+data$Mean <- as.numeric(sub(" ns", "", data$Mean))
+data$Min <- as.numeric(sub(" ns", "", data$Min))
+data$Max <- as.numeric(sub(" ns", "", data$Max))
+data$Q1 <- as.numeric(sub(" ns", "", data$Q1))
+data$Q3 <- as.numeric(sub(" ns", "", data$Q3))
+data$Median <- as.numeric(sub(" ns", "", data$Median))
+
+# Select the necessary columns for plotting
 metrics <- data.frame(
   Method = data$Method,
   Mean = data$Mean,
@@ -27,7 +36,7 @@ p <- ggplot(metrics_melted, aes(x = Method, y = Value, fill = Metric)) +
   geom_bar(stat="identity", position = "dodge") +
   labs(title="Fibonacci Benchmark Results", x="Method", y="Time (ns)", fill="Metric") +
   theme_minimal(base_size = 15) +
-  scale_fill_brewer(palette="Set2") + # Using a color palette from RColorBrewer
+  scale_fill_brewer(palette="Set2") +  # Using a color palette from RColorBrewer
   theme(
     axis.text.x = element_text(angle=45, hjust=1),  # Rotate x-axis labels for readability
     plot.title = element_text(size=20, face="bold", hjust=0.5),
