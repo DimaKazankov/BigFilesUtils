@@ -58,32 +58,19 @@ public class FileGeneratorParallel : IFileGenerator
             await using var writer = new StreamWriter(filePath, false, Encoding.UTF8, 65536);
             while (true)
             {
-                // Write all lines currently in the queue
-                while (queue.TryDequeue(out var line))
-                {
-                    await writer.WriteAsync(line);
-                }
+                while (queue.TryDequeue(out var line)) await writer.WriteAsync(line);
 
-                // Check if producers have completed and queue is empty
                 if (cts.IsCancellationRequested && queue.IsEmpty)
                 {
-                    // Wait for all producers to finish
                     await Task.WhenAll(producerTasks.ToArray());
-                    // After all producers are done, write any remaining lines
                     while (queue.TryDequeue(out var line))
-                    {
                         await writer.WriteAsync(line);
-                    }
 
                     break;
                 }
-
-                // Optional: Prevent tight loop
-                // Thread.Sleep(1);
             }
         });
 
-        // Wait for both producers and consumer to complete
         await Task.WhenAll(producerTasks.ToArray());
         await consumerTask;
     }

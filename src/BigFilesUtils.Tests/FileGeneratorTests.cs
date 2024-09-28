@@ -13,7 +13,6 @@ public class FileGeneratorTests : IDisposable
     [InlineData(GeneratorType.Buffered)]
     [InlineData(GeneratorType.Parallel)]
     [InlineData(GeneratorType.MemoryMapped)]
-    [InlineData(GeneratorType.Hybrid)]
     public async Task GenerateFileAsync_CreatesFileOfExpectedSize(GeneratorType generatorType)
     {
         const long expectedSizeInBytes = 10 * 1024; // 10 KB
@@ -31,7 +30,6 @@ public class FileGeneratorTests : IDisposable
     [InlineData(GeneratorType.Buffered)]
     [InlineData(GeneratorType.Parallel)]
     [InlineData(GeneratorType.MemoryMapped)]
-    [InlineData(GeneratorType.Hybrid)]
     public async Task GenerateFileAsync_CreatesFileWithExpectedContentFormat(GeneratorType generatorType)
     {
         const long sizeInBytes = 5 * 1024; // 5 KB
@@ -48,7 +46,8 @@ public class FileGeneratorTests : IDisposable
 
         foreach (var line in lines)
         {
-            Assert.Matches(regex, line);
+            var trimmedLine = line.TrimEnd('\r', '\n');
+            Assert.Matches(regex, trimmedLine);
         }
     }
 
@@ -60,7 +59,6 @@ public class FileGeneratorTests : IDisposable
             GeneratorType.Buffered => new FileGeneratorBuffered(),
             GeneratorType.Parallel => new FileGeneratorParallel(),
             GeneratorType.MemoryMapped => new FileGeneratorMemoryMapped(),
-            GeneratorType.Hybrid => new FileGeneratorHybrid(),
             _ => throw new ArgumentOutOfRangeException(nameof(generatorType), generatorType, null),
         };
     }
