@@ -8,6 +8,27 @@ using BenchmarkDotNet.Running;
 using BigFilesUtils;
 
 BenchmarkSwitcher.FromAssembly(Assembly.GetExecutingAssembly()).Run(args);
+public struct FileSize
+{
+    public long Bytes { get; }
+
+    public FileSize(long bytes)
+    {
+        Bytes = bytes;
+    }
+
+    public override string ToString()
+    {
+        const double GB = 1024 * 1024 * 1024;
+        const double MB = 1024 * 1024;
+        const double KB = 1024;
+
+        return Bytes >= GB ? $"{Bytes / GB:F2} GB" :
+            Bytes >= MB ? $"{Bytes / MB:F2} MB" :
+            Bytes >= KB ? $"{Bytes / KB:F2} KB" : $"{Bytes} B";
+    }
+}
+
 
 [MemoryDiagnoser]
 [MinColumn, MaxColumn, MeanColumn, Q1Column, Q3Column, MedianColumn, StdDevColumn]
@@ -20,19 +41,23 @@ public class FileGeneratorBenchmark
     private FileGenerator? _fileGenerator;
     private string? _fileName;
 
-    [Params(100 * 1024, 100 * 1024 * 1024, 10L * 1024L * 1024L)]
-    public long FileSizeInBytes { get; set; }
+    [Params(
+        100 * 1024,
+        100 * 1024 * 1024,
+        1024 * 1024L * 1024L,
+        10 * 1024 * 1024L * 1024L,
+        100 * 1024 * 1024L * 1024L)]
+    public FileSize FileSizeInBytes { get; set; }
 
     [GlobalSetup]
     public void Setup()
     {
         _fileGenerator = new FileGenerator();
-        var sizeLabel = GetSizeLabel(FileSizeInBytes);
-        _fileName = $"{sizeLabel}_file_generator_benchmark.txt";
+        _fileName = $"{FileSizeInBytes}_file_generator_benchmark.txt";
     }
 
     [Benchmark]
-    public void GenerateFile() => _fileGenerator!.GenerateFile(_fileName!, FileSizeInBytes);
+    public void GenerateFile() => _fileGenerator!.GenerateFile(_fileName!, FileSizeInBytes.Bytes);
 
     [GlobalCleanup]
     public void Cleanup()
@@ -46,34 +71,6 @@ public class FileGeneratorBenchmark
         catch (Exception ex)
         {
             Console.WriteLine($"Error deleting file {_fileName}: {ex.Message}");
-        }
-    }
-
-    private static string GetSizeLabel(long bytes)
-    {
-        const long gb = 1024L * 1024L * 1024L;
-        const long mb = 1024L * 1024L;
-        const long kb = 1024L;
-
-        switch (bytes)
-        {
-            case >= gb:
-            {
-                var sizeInGb = (double)bytes / gb;
-                return $"{sizeInGb:F2}GB";
-            }
-            case >= mb:
-            {
-                var sizeInMb = (double)bytes / mb;
-                return $"{sizeInMb:F2}MB";
-            }
-            case >= kb:
-            {
-                var sizeInKb = (double)bytes / kb;
-                return $"{sizeInKb:F2}KB";
-            }
-            default:
-                return $"{bytes}B";
         }
     }
 }
