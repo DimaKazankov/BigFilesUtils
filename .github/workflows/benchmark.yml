@@ -71,10 +71,15 @@ jobs:
       - name: Run Benchmarks
         run: dotnet "./publish/BigFilesUtils.dll" -f "*"
 
+      # Clean docs directory
+      - name: Clean docs directory
+        run: |
+          rm -rf docs/*
+          mkdir -p docs/
+
       # Move specific benchmark results to 'docs' directory
       - name: Move benchmark results
         run: |
-          mkdir -p docs/
           # Move only the barplot image and GitHub report markdown
           mv BenchmarkDotNet.Artifacts/results/*-barplot.png docs/ || echo "No barplot found!"
           mv BenchmarkDotNet.Artifacts/results/*-report-github.md docs/ || echo "No GitHub markdown report found!"
