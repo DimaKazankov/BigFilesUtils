@@ -9,10 +9,10 @@ public class FileGenerator : IFileGenerator
         "Apple", "Banana is yellow", "Cherry is the best", "Something something something"
     ];
 
-    public void GenerateFile(string filePath, long fileSizeInBytes)
+    public async Task GenerateFileAsync(string filePath, long fileSizeInBytes)
     {
         var random = new Random();
-        using var writer = new StreamWriter(filePath, false, Encoding.UTF8, 65536);
+        await using var writer = new StreamWriter(filePath, false, Encoding.UTF8, 65536);
         long currentSize = 0;
         while (currentSize < fileSizeInBytes)
         {
@@ -20,7 +20,7 @@ public class FileGenerator : IFileGenerator
             var str = SampleStrings[random.Next(SampleStrings.Length)];
             var line = $"{number}. {str}";
 
-            writer.WriteLine(line);
+            await writer.WriteLineAsync(line);
             currentSize += Encoding.UTF8.GetByteCount(line + Environment.NewLine);
         }
     }

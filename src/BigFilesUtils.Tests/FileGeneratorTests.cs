@@ -1,16 +1,8 @@
-using System.Text;
 using System.Text.RegularExpressions;
+using BigFilesUtils.Benchmark;
 using BigFilesUtils.Domain;
 
 namespace BigFilesUtils.Tests;
-
-public enum GeneratorType
-{
-    Original,
-    Buffered,
-    Parallel,
-    MemoryMapped
-}
 
 public class FileGeneratorTests : IDisposable
 {
@@ -21,12 +13,13 @@ public class FileGeneratorTests : IDisposable
     [InlineData(GeneratorType.Buffered)]
     [InlineData(GeneratorType.Parallel)]
     [InlineData(GeneratorType.MemoryMapped)]
-    public void GenerateFile_CreatesFileOfExpectedSize(GeneratorType generatorType)
+    [InlineData(GeneratorType.Hybrid)]
+    public async Task GenerateFileAsync_CreatesFileOfExpectedSize(GeneratorType generatorType)
     {
         const long expectedSizeInBytes = 10 * 1024; // 10 KB
         var fileGenerator = GetFileGenerator(generatorType);
 
-        fileGenerator.GenerateFile(_tempFileName, expectedSizeInBytes);
+        await fileGenerator.GenerateFileAsync(_tempFileName, expectedSizeInBytes);
 
         var fileInfo = new FileInfo(_tempFileName);
         Assert.True(fileInfo.Exists, "Generated file does not exist.");
@@ -38,14 +31,15 @@ public class FileGeneratorTests : IDisposable
     [InlineData(GeneratorType.Buffered)]
     [InlineData(GeneratorType.Parallel)]
     [InlineData(GeneratorType.MemoryMapped)]
-    public void GenerateFile_CreatesFileWithExpectedContentFormat(GeneratorType generatorType)
+    [InlineData(GeneratorType.Hybrid)]
+    public async Task GenerateFileAsync_CreatesFileWithExpectedContentFormat(GeneratorType generatorType)
     {
         const long sizeInBytes = 5 * 1024; // 5 KB
         var fileGenerator = GetFileGenerator(generatorType);
 
-        fileGenerator.GenerateFile(_tempFileName, sizeInBytes);
+        await fileGenerator.GenerateFileAsync(_tempFileName, sizeInBytes);
 
-        var lines = File.ReadAllLines(_tempFileName, Encoding.UTF8);
+        var lines = await File.ReadAllLinesAsync(_tempFileName);
 
         Assert.NotEmpty(lines);
 
@@ -65,6 +59,7 @@ public class FileGeneratorTests : IDisposable
             GeneratorType.Buffered => new FileGeneratorBuffered(),
             GeneratorType.Parallel => new FileGeneratorParallel(),
             GeneratorType.MemoryMapped => new FileGeneratorMemoryMapped(),
+            GeneratorType.Hybrid => new FileGeneratorHybrid(),
             _ => throw new ArgumentOutOfRangeException(nameof(generatorType), generatorType, null),
         };
     }

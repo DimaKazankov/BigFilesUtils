@@ -18,19 +18,11 @@ public class FileGeneratorBenchmark
     private string? _fileName;
     private IFileGenerator? _fileGenerator;
 
-    public enum GeneratorType
-    {
-        Original,
-        Buffered,
-        Parallel,
-        MemoryMapped
-    }
-
     public static IEnumerable<FileSize> FileSizes =>
     [
         new(100 * 1024 * 1024), // 100 MB
         new(500 * 1024 * 1024), // 500 MB
-        new(1024 * 1024 * 1024) // 1 GB
+        //new(1024 * 1024 * 1024) // 1 GB
     ];
 
     [ParamsSource(nameof(FileSizes))]
@@ -50,6 +42,7 @@ public class FileGeneratorBenchmark
             GeneratorType.Buffered => new FileGeneratorBuffered(),
             GeneratorType.Parallel => new FileGeneratorParallel(),
             GeneratorType.MemoryMapped => new FileGeneratorMemoryMapped(),
+            GeneratorType.Hybrid => new FileGeneratorHybrid(),
             _ => throw new ArgumentOutOfRangeException()
         };
     }
@@ -57,7 +50,7 @@ public class FileGeneratorBenchmark
     [Benchmark]
     public void GenerateFile()
     {
-        _fileGenerator!.GenerateFile(_fileName!, FileSizeInBytes.Bytes);
+        _fileGenerator!.GenerateFileAsync(_fileName!, FileSizeInBytes.Bytes);
     }
 
     [GlobalCleanup]
@@ -67,7 +60,7 @@ public class FileGeneratorBenchmark
             return;
         try
         {
-            System.IO.File.Delete(_fileName);
+            File.Delete(_fileName);
         }
         catch (Exception ex)
         {

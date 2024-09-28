@@ -10,14 +10,15 @@ public class FileGeneratorMemoryMapped : IFileGenerator
         "Apple", "Banana is yellow", "Cherry is the best", "Something something something"
     ];
 
-    public void GenerateFile(string filePath, long fileSizeInBytes)
+    public async Task GenerateFileAsync(string filePath, long fileSizeInBytes) => await Task.Run(() => GenerateFileInternal(filePath, fileSizeInBytes));
+
+    private void GenerateFileInternal(string filePath, long fileSizeInBytes)
     {
         var random = new Random();
         using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
             fs.SetLength(fileSizeInBytes);
 
-        using var mmf = MemoryMappedFile.CreateFromFile(filePath, FileMode.Open, null, fileSizeInBytes,
-            MemoryMappedFileAccess.ReadWrite);
+        using var mmf = MemoryMappedFile.CreateFromFile(filePath, FileMode.Open, null, fileSizeInBytes, MemoryMappedFileAccess.ReadWrite);
         using var accessor = mmf.CreateViewAccessor(0, fileSizeInBytes, MemoryMappedFileAccess.Write);
 
         long position = 0;
