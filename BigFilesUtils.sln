@@ -4,6 +4,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BigFilesUtils", "src\BigFil
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BigFilesUtils.Tests", "src\BigFilesUtils.Tests\BigFilesUtils.Tests.csproj", "{1460D165-E5AD-4C75-BB86-CFF39FCE7DC7}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".scripts", ".scripts", "{463463E6-E544-4C0C-880C-B09EA7379390}"
+	ProjectSection(SolutionItems) = preProject
+		.scripts\generate_plot.R = .scripts\generate_plot.R
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

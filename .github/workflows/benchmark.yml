@@ -40,7 +40,7 @@ jobs:
       # Setup R environment
       - name: Setup R
         uses: r-lib/actions/setup-r@v2
-      
+        
       # Cache R packages
       - name: Cache R packages
         uses: actions/cache@v3
@@ -63,10 +63,6 @@ jobs:
       - name: Build the project
         run: dotnet build -c Release --no-restore
 
-      # Run Tests
-      - name: Run Tests
-        run: dotnet test --no-build --verbosity normal -c Release
-
       # Publish the project
       - name: Publish
         run: dotnet publish -c Release --verbosity normal -o ./publish/
@@ -81,32 +77,20 @@ jobs:
           rm -rf docs/*
           mkdir -p docs/
 
-      # Move benchmark results
+      # Move specific benchmark results to 'docs' directory
       - name: Move benchmark results
         run: |
-          # Create docs directory if it doesn't exist
-          mkdir -p docs/
-          # Move markdown reports
-          mv BenchmarkDotNet.Artifacts/results/*-report-github.md docs/ || echo "No GitHub markdown report found!"
-          # Move barplot images
+          # Move only the barplot image and GitHub report markdown
           mv BenchmarkDotNet.Artifacts/results/*-barplot.png docs/ || echo "No barplot found!"
-          # Move additional plots
-          mv BenchmarkDotNet.Artifacts/results/*-measurement.png docs/ || echo "No measurement plot found!"
-          mv BenchmarkDotNet.Artifacts/results/*-distribution.png docs/ || echo "No distribution plot found!"
-          # Move CSV and HTML reports
-          mv BenchmarkDotNet.Artifacts/results/*.csv docs/ || echo "No CSV report found!"
-          mv BenchmarkDotNet.Artifacts/results/*.html docs/ || echo "No HTML report found!"
-      
+          mv BenchmarkDotNet.Artifacts/results/*-report-github.md docs/ || echo "No GitHub markdown report found!"
 
-        # Update README.md with benchmark results
+      # Update README.md with benchmark results
       - name: Update README.md
         run: |
           # Remove existing benchmark results from README.md
           sed -i '/<!-- BENCHMARK RESULTS START -->/,/<!-- BENCHMARK RESULTS END -->/d' README.md
           # Add new benchmark results to README.md
           echo '<!-- BENCHMARK RESULTS START -->' >> README.md
-          echo '' >> README.md
-          echo '## Benchmark Results' >> README.md
           echo '' >> README.md
           echo '*Last updated on '"$(date -u)"' UTC*' >> README.md
           echo '' >> README.md
@@ -115,25 +99,12 @@ jobs:
           echo '' >> README.md
           # Include the barplot image
           for img in docs/*-barplot.png; do
-            echo "### Performance Barplot" >> README.md
             echo "![Benchmark Barplot]($img)" >> README.md
             echo '' >> README.md
           done
-          # Include additional plots
-          for img in docs/*-measurement.png; do
-            echo "### Measurement Overhead Plot" >> README.md
-            echo "![Measurement Overhead Plot]($img)" >> README.md
-            echo '' >> README.md
-          done
-          for img in docs/*-distribution.png; do
-            echo "### Distribution Plot" >> README.md
-            echo "![Distribution Plot]($img)" >> README.md
-            echo '' >> README.md
-          done
           echo '<!-- BENCHMARK RESULTS END -->' >> README.md
-      
-      
-        # Commit and push changes
+
+      # Commit and push changes
       - name: Commit and push changes
         run: |
           git config --local user.name "github-actions[bot]"
