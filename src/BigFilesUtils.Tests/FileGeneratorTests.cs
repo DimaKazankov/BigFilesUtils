@@ -1,3 +1,4 @@
+using BigFilesUtils.Domain;
 using FluentAssertions;
 
 namespace BigFilesUtils.Tests;

@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace BigFilesUtils;
+namespace BigFilesUtils.Domain;
 
 public class FileGenerator
 {
