@@ -5,39 +5,60 @@ using BigFilesUtils.Domain;
 namespace BigFilesUtils.Benchmark;
 
 [MemoryDiagnoser]
-[MinColumn, MaxColumn, MeanColumn, Q1Column, Q3Column, MedianColumn, StdDevColumn]
+[MinColumn, MaxColumn, MeanColumn, MedianColumn, StdDevColumn, StdErrorColumn]
 [MarkdownExporterAttribute.GitHub]
 [RPlotExporter]
+[HtmlExporter]
+[CsvExporter]
 [GcServer(true)]
-[ShortRunJob]
 [Config(typeof(CustomConfig))]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
 public class FileGeneratorBenchmark
 {
-    private FileGenerator? _fileGenerator;
     private string? _fileName;
-    
+    private IFileGenerator? _fileGenerator;
+
+    public enum GeneratorType
+    {
+        Original,
+        Buffered,
+        Parallel,
+        MemoryMapped
+    }
+
     public static IEnumerable<FileSize> FileSizes =>
     [
-        new(1024 * 1024),
-        new(100 * 1024L * 1024L),
-        new(1024L * 1024L * 1024L),
-        // new(10 * 1024L * 1024L * 1024L),
-        // new(100 * 1024 * 1024L * 1024L)
+        new(100 * 1024 * 1024), // 100 MB
+        new(500 * 1024 * 1024), // 500 MB
+        new(1024 * 1024 * 1024) // 1 GB
     ];
 
     [ParamsSource(nameof(FileSizes))]
     public FileSize FileSizeInBytes { get; set; }
 
+    [ParamsAllValues]
+    public GeneratorType Generator { get; set; }
+
     [GlobalSetup]
     public void Setup()
     {
-        _fileGenerator = new FileGenerator();
-        _fileName = $"{FileSizeInBytes}_file_generator_benchmark.txt";
+        _fileName = $"{FileSizeInBytes}_{Generator}_file.txt";
+
+        _fileGenerator = Generator switch
+        {
+            GeneratorType.Original => new FileGenerator(),
+            GeneratorType.Buffered => new FileGeneratorBuffered(),
+            GeneratorType.Parallel => new FileGeneratorParallel(),
+            GeneratorType.MemoryMapped => new FileGeneratorMemoryMapped(),
+            _ => throw new ArgumentOutOfRangeException()
+        };
     }
 
     [Benchmark]
-    public void GenerateFile() => _fileGenerator!.GenerateFile(_fileName!, FileSizeInBytes.Bytes);
+    public void GenerateFile()
+    {
+        _fileGenerator!.GenerateFile(_fileName!, FileSizeInBytes.Bytes);
+    }
 
     [GlobalCleanup]
     public void Cleanup()
@@ -46,7 +67,7 @@ public class FileGeneratorBenchmark
             return;
         try
         {
-            File.Delete(_fileName);
+            System.IO.File.Delete(_fileName);
         }
         catch (Exception ex)
         {
