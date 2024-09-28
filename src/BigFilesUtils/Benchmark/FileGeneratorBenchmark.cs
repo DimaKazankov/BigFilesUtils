@@ -21,7 +21,7 @@ public class FileGeneratorBenchmark
     public static IEnumerable<FileSize> FileSizes =>
     [
         new(100 * 1024 * 1024), // 100 MB
-        new(500 * 1024 * 1024), // 500 MB
+        // new(500 * 1024 * 1024), // 500 MB
         //new(1024 * 1024 * 1024) // 1 GB
     ];
 
