@@ -2,7 +2,7 @@
 
 namespace BigFilesUtils.Domain;
 
-public class FileGeneratorBuffered
+public class FileGeneratorBuffered : IFileGenerator
 {
     private static readonly string[] SampleStrings =
     [
