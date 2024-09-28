@@ -5,20 +5,20 @@ namespace BigFilesUtils.Domain;
 public class FileGeneratorHybrid : IFileGenerator
 {
     private static readonly string[] SampleStrings =
-    {
+    [
         "Apple", "Banana is yellow", "Cherry is the best", "Something something something"
-    };
+    ];
 
     public async Task GenerateFileAsync(string filePath, long fileSizeInBytes)
     {
-        var bufferSize = 65536;
+        const int bufferSize = 65536;
         var totalBytesGenerated = 0L;
 
         await using var writer = new StreamWriter(filePath, false, Encoding.UTF8, bufferSize);
 
         while (totalBytesGenerated < fileSizeInBytes)
         {
-            var tasks = new Task<string>[Environment.ProcessorCount];
+            var tasks = new Task<byte[]>[Environment.ProcessorCount];
 
             // Generate data in parallel
             for (var i = 0; i < tasks.Length; i++)
@@ -36,7 +36,7 @@ public class FileGeneratorHybrid : IFileGenerator
                         sb.Append(line);
                     }
 
-                    return sb.ToString();
+                    return Encoding.UTF8.GetBytes(sb.ToString());
                 });
             }
 
@@ -46,19 +46,25 @@ public class FileGeneratorHybrid : IFileGenerator
             // Write results asynchronously
             foreach (var data in results)
             {
-                var byteCount = Encoding.UTF8.GetByteCount(data);
+                var byteCount = data.Length;
+
                 if (totalBytesGenerated + byteCount > fileSizeInBytes)
                 {
-                    var remainingBytes = fileSizeInBytes - totalBytesGenerated;
-                    var truncatedData = data.Substring(0, (int)remainingBytes);
-                    await writer.WriteAsync(truncatedData);
-                    totalBytesGenerated += remainingBytes;
-                    break;
+                    var remainingBytes = (int)(fileSizeInBytes - totalBytesGenerated);
+                    if (remainingBytes > 0)
+                    {
+                        await writer.BaseStream.WriteAsync(data, 0, remainingBytes);
+                        totalBytesGenerated += remainingBytes;
+                    }
+                    break; // Exit the foreach loop
                 }
 
-                await writer.WriteAsync(data);
+                await writer.BaseStream.WriteAsync(data, 0, byteCount);
                 totalBytesGenerated += byteCount;
             }
+
+            if (totalBytesGenerated >= fileSizeInBytes)
+                break; 
         }
     }
 }

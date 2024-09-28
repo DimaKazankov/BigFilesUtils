@@ -38,6 +38,7 @@ public class FileGeneratorTests : IDisposable
         var fileGenerator = GetFileGenerator(generatorType);
 
         await fileGenerator.GenerateFileAsync(_tempFileName, sizeInBytes);
+        Assert.True(File.Exists(_tempFileName), "Generated file does not exist.");
 
         var lines = await File.ReadAllLinesAsync(_tempFileName);
 
