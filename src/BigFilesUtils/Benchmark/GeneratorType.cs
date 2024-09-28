@@ -5,6 +5,5 @@ public enum GeneratorType
     Original,
     Buffered,
     Parallel,
-    MemoryMapped,
-    Hybrid
+    MemoryMapped
 }

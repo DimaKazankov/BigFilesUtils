@@ -19,23 +19,38 @@ public class FileGeneratorMemoryMapped : IFileGenerator
         using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
             fs.SetLength(fileSizeInBytes);
 
-        using var mmf = MemoryMappedFile.CreateFromFile(filePath, FileMode.Open, null, fileSizeInBytes, MemoryMappedFileAccess.ReadWrite);
-
-        using var accessor = mmf.CreateViewAccessor(0, fileSizeInBytes, MemoryMappedFileAccess.Write);
+        using var mmf = MemoryMappedFile.CreateFromFile(
+            filePath,
+            FileMode.Open,
+            null,
+            fileSizeInBytes,
+            MemoryMappedFileAccess.ReadWrite);
 
         long position = 0;
-        while (position < fileSizeInBytes)
+
+        using var accessor = mmf.CreateViewStream();
+        var isFirstLine = true;
+
+        while (true)
         {
             var number = random.Next(1, 1000000);
             var str = SampleStrings[random.Next(SampleStrings.Length)];
-            var line = $"{number}. {str}{Environment.NewLine}";
+
+            var line = $"{number}. {str}";
+
+            if (!isFirstLine)
+            {
+                line = Environment.NewLine + line;
+            }
+
             var bytes = Encoding.UTF8.GetBytes(line);
 
             if (position + bytes.Length > fileSizeInBytes)
                 break;
 
-            accessor.WriteArray(position, bytes, 0, bytes.Length);
+            accessor.Write(bytes, 0, bytes.Length);
             position += bytes.Length;
+            isFirstLine = false;
         }
 
         accessor.Flush();

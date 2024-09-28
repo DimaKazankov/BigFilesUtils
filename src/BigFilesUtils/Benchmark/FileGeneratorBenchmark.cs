@@ -42,7 +42,6 @@ public class FileGeneratorBenchmark
             GeneratorType.Buffered => new FileGeneratorBuffered(),
             GeneratorType.Parallel => new FileGeneratorParallel(),
             GeneratorType.MemoryMapped => new FileGeneratorMemoryMapped(),
-            GeneratorType.Hybrid => new FileGeneratorHybrid(),
             _ => throw new ArgumentOutOfRangeException()
         };
     }
