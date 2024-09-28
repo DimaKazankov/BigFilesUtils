@@ -71,12 +71,13 @@ jobs:
       - name: Run Benchmarks
         run: dotnet "./publish/BigFilesUtils.dll" -f "*"
 
-      # Move benchmark results to 'docs' directory
+      # Move specific benchmark results to 'docs' directory
       - name: Move benchmark results
         run: |
           mkdir -p docs/
-          mv BenchmarkDotNet.Artifacts/results/*.md docs/ || echo "No markdown file found!"
-          mv BenchmarkDotNet.Artifacts/results/*.png docs/ || echo "No plot file found!"
+          # Move only the barplot image and GitHub report markdown
+          mv BenchmarkDotNet.Artifacts/results/*-barplot.png docs/ || echo "No barplot found!"
+          mv BenchmarkDotNet.Artifacts/results/*-report-github.md docs/ || echo "No GitHub markdown report found!"
 
       # Update README.md with benchmark results
       - name: Update README.md
@@ -88,10 +89,12 @@ jobs:
           echo '' >> README.md
           echo '*Last updated on '"$(date -u)"' UTC*' >> README.md
           echo '' >> README.md
-          cat docs/*.md >> README.md
+          # Include the content of the GitHub report markdown
+          cat docs/*-report-github.md >> README.md
           echo '' >> README.md
-          for img in docs/*.png; do
-            echo "![]($img)" >> README.md
+          # Include the barplot image
+          for img in docs/*-barplot.png; do
+            echo "![Benchmark Barplot]($img)" >> README.md
             echo '' >> README.md
           done
           echo '<!-- BENCHMARK RESULTS END -->' >> README.md
@@ -101,8 +104,8 @@ jobs:
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/*.md || echo "No markdown file to add!"
-          git add docs/*.png || echo "No plot file to add!"
+          git add docs/*-report-github.md || echo "No markdown file to add!"
+          git add docs/*-barplot.png || echo "No barplot image to add!"
           git add README.md
           git commit -m "Update benchmark results in README"
           git push

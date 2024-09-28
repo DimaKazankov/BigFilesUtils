@@ -8,16 +8,6 @@ using BenchmarkDotNet.Running;
 using BigFilesUtils;
 
 BenchmarkSwitcher.FromAssembly(Assembly.GetExecutingAssembly()).Run(args);
-// public class CustomConfig : ManualConfig
-// {
-//     public CustomConfig()
-//     {
-//         AddExporter(RPlotExporter.Default);
-//         AddColumnProvider(DefaultColumnProviders.Instance);
-//         AddLogger(ConsoleLogger.Default);
-//         // Add any additional customizations here
-//     }
-// }
 
 [MemoryDiagnoser]
 [MinColumn, MaxColumn, MeanColumn, Q1Column, Q3Column, MedianColumn, StdDevColumn]
@@ -30,7 +20,7 @@ public class FileGeneratorBenchmark
     private FileGenerator? _fileGenerator;
     private string? _fileName;
 
-    [Params(100 * 1024, 100 * 1024 * 1024, 1024L * 1024L * 1024L)]
+    [Params(100 * 1024, 100 * 1024 * 1024, 10L * 1024L * 1024L)]
     public long FileSizeInBytes { get; set; }
 
     [GlobalSetup]
