@@ -4,9 +4,10 @@ namespace BigFilesUtils;
 
 public class FileGenerator
 {
-    private static readonly string[] SampleStrings = {
+    private static readonly string[] SampleStrings =
+    [
         "Apple", "Banana is yellow", "Cherry is the best", "Something something something"
-    };
+    ];
 
     public void GenerateFile(string filePath, long fileSizeInBytes)
     {
