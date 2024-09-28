@@ -5,7 +5,7 @@
 
 <!-- BENCHMARK RESULTS START -->
 
-*Last updated on Sat Sep 28 09:05:25 UTC 2024 UTC*
+*Last updated on Sat Sep 28 09:16:40 UTC 2024 UTC*
 
 ```
 
@@ -19,11 +19,11 @@ Job=ShortRun  Server=True  IterationCount=3
 LaunchCount=1  WarmupCount=3  
 
 ```
-| Method       | FileSizeInBytes | Mean     | Error    | StdDev   | Min      | Max      | Q1       | Q3       | Median   | Gen0       | Gen1    | Gen2    | Allocated  |
-|------------- |---------------- |---------:|---------:|---------:|---------:|---------:|---------:|---------:|---------:|-----------:|--------:|--------:|-----------:|
-| GenerateFile | 1.00 GB         | 8.0048 s | 9.3275 s | 0.5113 s | 7.4279 s | 8.4020 s | 7.8062 s | 8.2932 s | 8.1844 s | 19000.0000 |       - |       - | 5987.67 MB |
-| GenerateFile | 100.00 KB       | 0.0012 s | 0.0017 s | 0.0001 s | 0.0011 s | 0.0013 s | 0.0011 s | 0.0012 s | 0.0012 s |    64.4531 | 64.4531 | 64.4531 |    0.89 MB |
-| GenerateFile | 100.00 MB       | 0.7263 s | 0.1731 s | 0.0095 s | 0.7192 s | 0.7371 s | 0.7209 s | 0.7299 s | 0.7227 s |  1000.0000 |       - |       - |  585.03 MB |
+| Method       | FileSizeInBytes | Mean         | Error        | StdDev      | Min          | Max          | Q1           | Q3           | Median       | Gen0       | Gen1    | Gen2    | Allocated  |
+|------------- |---------------- |-------------:|-------------:|------------:|-------------:|-------------:|-------------:|-------------:|-------------:|-----------:|--------:|--------:|-----------:|
+| GenerateFile | 1.00 MB         |     7.433 ms |     2.781 ms |   0.1525 ms |     7.305 ms |     7.601 ms |     7.348 ms |     7.496 ms |     7.391 ms |    78.1250 | 62.5000 | 62.5000 |    6.16 MB |
+| GenerateFile | 100.00 MB       |   731.479 ms |   199.810 ms |  10.9523 ms |   720.564 ms |   742.468 ms |   725.984 ms |   736.936 ms |   731.404 ms |  1000.0000 |       - |       - |  585.04 MB |
+| GenerateFile | 1.00 GB         | 7,877.197 ms | 1,924.084 ms | 105.4656 ms | 7,786.038 ms | 7,992.709 ms | 7,819.441 ms | 7,922.777 ms | 7,852.845 ms | 19000.0000 |       - |       - | 5987.73 MB |
 
 ![Benchmark Barplot](docs/FileGeneratorBenchmark-barplot.png)
 
