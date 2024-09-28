@@ -32,8 +32,8 @@ public class CustomConfig : ManualConfig
     {
         // Set the time and size units
         SummaryStyle = BenchmarkDotNet.Reports.SummaryStyle.Default
-            .WithTimeUnit(TimeUnit.Second)      // Use seconds for time measurements
-            .WithSizeUnit(SizeUnit.MB)          // Use MB for size measurements
+            .WithTimeUnit(null)      // Use seconds for time measurements
+            .WithSizeUnit(null)          // Use MB for size measurements
             .WithMaxParameterColumnWidth(50);   // Adjust column width if necessary
     }
 }
@@ -46,7 +46,7 @@ public class CustomConfig : ManualConfig
 [GcServer(true)]
 [ShortRunJob]
 [Config(typeof(CustomConfig))]
-[Orderer(SummaryOrderPolicy.Declared)]
+[Orderer(SummaryOrderPolicy.FastestToSlowest)]
 public class FileGeneratorBenchmark
 {
     private FileGenerator? _fileGenerator;
@@ -54,10 +54,10 @@ public class FileGeneratorBenchmark
     
     public static IEnumerable<FileSize> FileSizes =>
     [
-        new(100 * 1024),
-        new(100 * 1024 * 1024),
-        new(1024 * 1024L * 1024L),
-        // new(10 * 1024 * 1024L * 1024L),
+        new(1024 * 1024),
+        new(100 * 1024L * 1024L),
+        new(1024L * 1024L * 1024L),
+        // new(10 * 1024L * 1024L * 1024L),
         // new(100 * 1024 * 1024L * 1024L)
     ];
 
