@@ -6,26 +6,28 @@ namespace BigFilesUtils.Domain;
 public class FileGeneratorParallel : IFileGenerator
 {
     private static readonly string[] SampleStrings =
-    {
+    [
         "Apple", "Banana is yellow", "Cherry is the best", "Something something something"
-    };
+    ];
 
     public async Task GenerateFileAsync(string filePath, long fileSizeInBytes)
     {
         var totalBytesGenerated = 0L;
-        var queue = new BlockingCollection<string>(boundedCapacity: 1000);
+        var queue = new ConcurrentQueue<string>();
         var cts = new CancellationTokenSource();
+        var producerTasks = new List<Task>();
 
         // Producer tasks
-        var producerTasks = new List<Task>();
-        for (var i = 0; i < Environment.ProcessorCount; i++)
+        for (int i = 0; i < Environment.ProcessorCount; i++)
         {
-            producerTasks.Add(Task.Run(() =>
+            var producerTask = Task.Run(() =>
             {
-                var random = new Random(Guid.NewGuid().GetHashCode());
-                var sb = new StringBuilder();
-                while (!cts.Token.IsCancellationRequested)
+                var random = new Random();
+                while (true)
                 {
+                    if (cts.IsCancellationRequested)
+                        break;
+
                     var number = random.Next(1, 1000000);
                     var str = SampleStrings[random.Next(SampleStrings.Length)];
                     var line = $"{number}. {str}{Environment.NewLine}";
@@ -35,44 +37,54 @@ public class FileGeneratorParallel : IFileGenerator
 
                     if (newTotal >= fileSizeInBytes)
                     {
-                        cts.Cancel();
+                        // Enqueue the last line if it doesn't exceed the size
+                        if (newTotal - fileSizeInBytes <= byteCount)
+                            queue.Enqueue(line);
+
+                        cts.Cancel(); // Signal cancellation
                         break;
                     }
 
-                    sb.Append(line);
-
-                    // Batch size of approximately 8 KB
-                    if (sb.Length >= 8192)
-                    {
-                        queue.Add(sb.ToString());
-                        sb.Clear();
-                    }
+                    queue.Enqueue(line);
                 }
+            });
 
-                // Add remaining lines
-                if (sb.Length > 0)
-                {
-                    queue.Add(sb.ToString());
-                }
-            }, cts.Token));
+            producerTasks.Add(producerTask);
         }
 
         // Consumer task
         var consumerTask = Task.Run(async () =>
         {
-            using var writer = new StreamWriter(filePath, false, Encoding.UTF8, 65536);
-
-            foreach (var data in queue.GetConsumingEnumerable(cts.Token))
+            await using var writer = new StreamWriter(filePath, false, Encoding.UTF8, 65536);
+            while (true)
             {
-                await writer.WriteAsync(data);
+                // Write all lines currently in the queue
+                while (queue.TryDequeue(out var line))
+                {
+                    await writer.WriteAsync(line);
+                }
+
+                // Check if producers have completed and queue is empty
+                if (cts.IsCancellationRequested && queue.IsEmpty)
+                {
+                    // Wait for all producers to finish
+                    await Task.WhenAll(producerTasks.ToArray());
+                    // After all producers are done, write any remaining lines
+                    while (queue.TryDequeue(out var line))
+                    {
+                        await writer.WriteAsync(line);
+                    }
+
+                    break;
+                }
+
+                // Optional: Prevent tight loop
+                // Thread.Sleep(1);
             }
-        }, cts.Token);
+        });
 
-        // Wait for producers to complete
-        await Task.WhenAll(producerTasks);
-
-        // Signal completion and wait for consumer
-        queue.CompleteAdding();
+        // Wait for both producers and consumer to complete
+        await Task.WhenAll(producerTasks.ToArray());
         await consumerTask;
     }
 }
