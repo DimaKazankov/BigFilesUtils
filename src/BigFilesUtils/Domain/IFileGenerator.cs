@@ -2,5 +2,5 @@
 
 public interface IFileGenerator
 {
-    void GenerateFile(string filePath, long fileSizeInBytes);
+    Task GenerateFileAsync(string filePath, long fileSizeInBytes);
 }

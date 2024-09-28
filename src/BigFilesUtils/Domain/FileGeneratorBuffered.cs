@@ -9,12 +9,11 @@ public class FileGeneratorBuffered : IFileGenerator
         "Apple", "Banana is yellow", "Cherry is the best", "Something something something"
     ];
 
-    public void GenerateFile(string filePath, long fileSizeInBytes)
+    public async Task GenerateFileAsync(string filePath, long fileSizeInBytes)
     {
         var random = new Random();
-        const int bufferSize = 8192; // 8 KB buffer
-        var sb = new StringBuilder(bufferSize);
-        using var writer = new StreamWriter(filePath, false, Encoding.UTF8, 65536);
+        var sb = new StringBuilder(65536); // Larger buffer size
+        await using var writer = new StreamWriter(filePath, false, Encoding.UTF8, 65536);
         long currentSize = 0;
 
         while (currentSize < fileSizeInBytes)
@@ -26,17 +25,17 @@ public class FileGeneratorBuffered : IFileGenerator
             sb.Append(line);
             currentSize += Encoding.UTF8.GetByteCount(line);
 
-            if (sb.Length < bufferSize)
-                continue;
-            
-            writer.Write(sb.ToString());
-            sb.Clear();
+            if (sb.Length >= 65536)
+            {
+                await writer.WriteAsync(sb.ToString());
+                sb.Clear();
+            }
         }
 
         // Write any remaining content
         if (sb.Length > 0)
         {
-            writer.Write(sb.ToString());
+            await writer.WriteAsync(sb.ToString());
         }
     }
 }
