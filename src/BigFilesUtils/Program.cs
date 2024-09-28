@@ -1,9 +1,15 @@
 using System.Reflection;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Order;
 using BenchmarkDotNet.Running;
 using BigFilesUtils;
+using Perfolizer.Horology;
+using Perfolizer.Metrology;
 
 BenchmarkSwitcher.FromAssembly(Assembly.GetExecutingAssembly()).Run(args);
+
+
 public readonly struct FileSize(long bytes)
 {
     public long Bytes { get; } = bytes;
@@ -20,6 +26,18 @@ public readonly struct FileSize(long bytes)
     }
 }
 
+public class CustomConfig : ManualConfig
+{
+    public CustomConfig()
+    {
+        // Set the time and size units
+        SummaryStyle = BenchmarkDotNet.Reports.SummaryStyle.Default
+            .WithTimeUnit(TimeUnit.Second)      // Use seconds for time measurements
+            .WithSizeUnit(SizeUnit.MB)          // Use MB for size measurements
+            .WithMaxParameterColumnWidth(50);   // Adjust column width if necessary
+    }
+}
+
 
 [MemoryDiagnoser]
 [MinColumn, MaxColumn, MeanColumn, Q1Column, Q3Column, MedianColumn, StdDevColumn]
@@ -27,6 +45,8 @@ public readonly struct FileSize(long bytes)
 [RPlotExporter]
 [GcServer(true)]
 [ShortRunJob]
+[Config(typeof(CustomConfig))]
+[Orderer(SummaryOrderPolicy.Declared)]
 public class FileGeneratorBenchmark
 {
     private FileGenerator? _fileGenerator;
