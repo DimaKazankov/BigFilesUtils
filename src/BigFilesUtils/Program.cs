@@ -1,21 +1,12 @@
 using System.Reflection;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Columns;
-using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Exporters;
-using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Running;
 using BigFilesUtils;
 
 BenchmarkSwitcher.FromAssembly(Assembly.GetExecutingAssembly()).Run(args);
-public struct FileSize
+public readonly struct FileSize(long bytes)
 {
-    public long Bytes { get; }
-
-    public FileSize(long bytes)
-    {
-        Bytes = bytes;
-    }
+    public long Bytes { get; } = bytes;
 
     public override string ToString()
     {
@@ -40,13 +31,17 @@ public class FileGeneratorBenchmark
 {
     private FileGenerator? _fileGenerator;
     private string? _fileName;
+    
+    public static IEnumerable<FileSize> FileSizes =>
+    [
+        new(100 * 1024),
+        new(100 * 1024 * 1024),
+        new(1024 * 1024L * 1024L),
+        // new(10 * 1024 * 1024L * 1024L),
+        // new(100 * 1024 * 1024L * 1024L)
+    ];
 
-    [Params(
-        100 * 1024,
-        100 * 1024 * 1024,
-        1024 * 1024L * 1024L,
-        10 * 1024 * 1024L * 1024L,
-        100 * 1024 * 1024L * 1024L)]
+    [ParamsSource(nameof(FileSizes))]
     public FileSize FileSizeInBytes { get; set; }
 
     [GlobalSetup]
