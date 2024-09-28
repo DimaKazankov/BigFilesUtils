@@ -3,7 +3,7 @@ using System.Text;
 
 namespace BigFilesUtils.Domain;
 
-public class FileGeneratorParallel
+public class FileGeneratorParallel : IFileGenerator
 {
     private static readonly string[] SampleStrings =
     [
@@ -14,17 +14,20 @@ public class FileGeneratorParallel
     {
         var totalBytesGenerated = 0L;
         var queue = new ConcurrentQueue<string>();
-        var tasks = new List<Task>();
         var cts = new CancellationTokenSource();
+        var producerTasks = new List<Task>();
 
         // Producer tasks
         for (int i = 0; i < Environment.ProcessorCount; i++)
         {
-            tasks.Add(Task.Run(() =>
+            var producerTask = Task.Run(() =>
             {
                 var random = new Random();
-                while (!cts.Token.IsCancellationRequested)
+                while (true)
                 {
+                    if (cts.IsCancellationRequested)
+                        break;
+
                     var number = random.Next(1, 1000000);
                     var str = SampleStrings[random.Next(SampleStrings.Length)];
                     var line = $"{number}. {str}{Environment.NewLine}";
@@ -32,31 +35,56 @@ public class FileGeneratorParallel
                     var byteCount = Encoding.UTF8.GetByteCount(line);
                     var newTotal = Interlocked.Add(ref totalBytesGenerated, byteCount);
 
-                    if (newTotal > fileSizeInBytes)
+                    if (newTotal >= fileSizeInBytes)
                     {
-                        cts.Cancel();
+                        // Enqueue the last line if it doesn't exceed the size
+                        if (newTotal - fileSizeInBytes <= byteCount)
+                            queue.Enqueue(line);
+
+                        cts.Cancel(); // Signal cancellation
                         break;
                     }
 
                     queue.Enqueue(line);
                 }
-            }, cts.Token));
+            });
+
+            producerTasks.Add(producerTask);
         }
 
         // Consumer task
         var consumerTask = Task.Run(() =>
         {
             using var writer = new StreamWriter(filePath, false, Encoding.UTF8, 65536);
-            while (!cts.Token.IsCancellationRequested || !queue.IsEmpty)
+            while (true)
             {
-                if (queue.TryDequeue(out var line))
+                // Write all lines currently in the queue
+                while (queue.TryDequeue(out var line))
                 {
                     writer.Write(line);
                 }
-            }
-        }, cts.Token);
 
-        tasks.Add(consumerTask);
-        Task.WaitAll(tasks.ToArray());
+                // Check if producers have completed and queue is empty
+                if (cts.IsCancellationRequested && queue.IsEmpty)
+                {
+                    // Wait for all producers to finish
+                    Task.WaitAll(producerTasks.ToArray());
+                    // After all producers are done, write any remaining lines
+                    while (queue.TryDequeue(out var line))
+                    {
+                        writer.Write(line);
+                    }
+
+                    break;
+                }
+
+                // Optional: Prevent tight loop
+                Thread.Sleep(1);
+            }
+        });
+
+        // Wait for both producers and consumer to complete
+        Task.WaitAll(producerTasks.ToArray());
+        consumerTask.Wait();
     }
 }

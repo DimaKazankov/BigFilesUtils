@@ -1,50 +1,85 @@
+using System.Text;
+using System.Text.RegularExpressions;
 using BigFilesUtils.Domain;
-using FluentAssertions;
 
 namespace BigFilesUtils.Tests;
 
+public enum GeneratorType
+{
+    Original,
+    Buffered,
+    Parallel,
+    MemoryMapped
+}
+
 public class FileGeneratorTests : IDisposable
 {
-    private readonly string _testFilePath = Path.Combine(Path.GetTempPath(), "testFile.txt");
+    private readonly string _tempFileName = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".txt");
 
-    public FileGeneratorTests()
+    [Theory]
+    [InlineData(GeneratorType.Original)]
+    [InlineData(GeneratorType.Buffered)]
+    [InlineData(GeneratorType.Parallel)]
+    [InlineData(GeneratorType.MemoryMapped)]
+    public void GenerateFile_CreatesFileOfExpectedSize(GeneratorType generatorType)
     {
-        if (File.Exists(_testFilePath))
-            File.Delete(_testFilePath);
+        const long expectedSizeInBytes = 10 * 1024; // 10 KB
+        var fileGenerator = GetFileGenerator(generatorType);
+
+        fileGenerator.GenerateFile(_tempFileName, expectedSizeInBytes);
+
+        var fileInfo = new FileInfo(_tempFileName);
+        Assert.True(fileInfo.Exists, "Generated file does not exist.");
+        Assert.True(fileInfo.Length >= expectedSizeInBytes, $"Generated file size is less than expected. Expected at least {expectedSizeInBytes} bytes, but was {fileInfo.Length} bytes.");
     }
 
-    [Fact]
-    public void GenerateFile_ShouldCreateFileWithApproximateSize()
+    [Theory]
+    [InlineData(GeneratorType.Original)]
+    [InlineData(GeneratorType.Buffered)]
+    [InlineData(GeneratorType.Parallel)]
+    [InlineData(GeneratorType.MemoryMapped)]
+    public void GenerateFile_CreatesFileWithExpectedContentFormat(GeneratorType generatorType)
     {
-        var fileGenerator = new FileGenerator();
-        const long expectedSize = 1024; // 1 KB file
+        const long sizeInBytes = 5 * 1024; // 5 KB
+        var fileGenerator = GetFileGenerator(generatorType);
 
-        fileGenerator.GenerateFile(_testFilePath, expectedSize);
+        fileGenerator.GenerateFile(_tempFileName, sizeInBytes);
 
-        File.Exists(_testFilePath).Should().BeTrue();
-        var fileInfo = new FileInfo(_testFilePath);
-        fileInfo.Length.Should().BeGreaterOrEqualTo(expectedSize);
-    }
+        var lines = File.ReadAllLines(_tempFileName, Encoding.UTF8);
 
-    [Fact]
-    public void GenerateFile_ShouldHaveCorrectLineFormat()
-    {
-        var fileGenerator = new FileGenerator();
-        const long fileSize = 1024; // 1 KB file
+        Assert.NotEmpty(lines);
 
-        fileGenerator.GenerateFile(_testFilePath, fileSize);
+        var regex = new Regex(@"^\d+\. .+$");
 
-        File.Exists(_testFilePath).Should().BeTrue();
-        var lines = File.ReadAllLines(_testFilePath);
         foreach (var line in lines)
         {
-            line.Should().MatchRegex(@"^\d+\. .+$");
+            Assert.Matches(regex, line);
         }
+    }
+
+    private IFileGenerator GetFileGenerator(GeneratorType generatorType)
+    {
+        return generatorType switch
+        {
+            GeneratorType.Original => new FileGenerator(),
+            GeneratorType.Buffered => new FileGeneratorBuffered(),
+            GeneratorType.Parallel => new FileGeneratorParallel(),
+            GeneratorType.MemoryMapped => new FileGeneratorMemoryMapped(),
+            _ => throw new ArgumentOutOfRangeException(nameof(generatorType), generatorType, null),
+        };
     }
 
     public void Dispose()
     {
-        if (File.Exists(_testFilePath))
-            File.Delete(_testFilePath);
+        if (!File.Exists(_tempFileName))
+            return;
+        try
+        {
+            File.Delete(_tempFileName);
+        }
+        catch
+        {
+            // Ignore exceptions during cleanup
+        }
     }
 }

@@ -3,7 +3,7 @@ using System.Text;
 
 namespace BigFilesUtils.Domain;
 
-public class FileGeneratorMemoryMapped
+public class FileGeneratorMemoryMapped : IFileGenerator
 {
     private static readonly string[] SampleStrings =
     [
@@ -13,8 +13,12 @@ public class FileGeneratorMemoryMapped
     public void GenerateFile(string filePath, long fileSizeInBytes)
     {
         var random = new Random();
-        using var mmf = MemoryMappedFile.CreateFromFile(filePath, FileMode.Create, null, fileSizeInBytes);
-        using var accessor = mmf.CreateViewAccessor();
+        using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
+            fs.SetLength(fileSizeInBytes);
+
+        using var mmf = MemoryMappedFile.CreateFromFile(filePath, FileMode.Open, null, fileSizeInBytes,
+            MemoryMappedFileAccess.ReadWrite);
+        using var accessor = mmf.CreateViewAccessor(0, fileSizeInBytes, MemoryMappedFileAccess.Write);
 
         long position = 0;
 
@@ -26,10 +30,22 @@ public class FileGeneratorMemoryMapped
             var bytes = Encoding.UTF8.GetBytes(line);
 
             if (position + bytes.Length > fileSizeInBytes)
+            {
+                var remainingSpace = fileSizeInBytes - position;
+                if (remainingSpace > 0)
+                {
+                    var truncatedLine = Encoding.UTF8.GetString(bytes, 0, (int)remainingSpace);
+                    bytes = Encoding.UTF8.GetBytes(truncatedLine);
+                    accessor.WriteArray(position, bytes, 0, bytes.Length);
+                }
+
                 break;
+            }
 
             accessor.WriteArray(position, bytes, 0, bytes.Length);
             position += bytes.Length;
         }
+
+        accessor.Flush();
     }
 }

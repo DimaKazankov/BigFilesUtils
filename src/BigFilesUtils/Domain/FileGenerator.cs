@@ -2,7 +2,7 @@
 
 namespace BigFilesUtils.Domain;
 
-public class FileGenerator
+public class FileGenerator : IFileGenerator
 {
     private static readonly string[] SampleStrings =
     [
