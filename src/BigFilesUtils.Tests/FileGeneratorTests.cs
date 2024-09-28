@@ -1,79 +1,50 @@
-using System.Text.RegularExpressions;
-using BigFilesUtils.Benchmark;
 using BigFilesUtils.Domain;
+using FluentAssertions;
 
 namespace BigFilesUtils.Tests;
 
 public class FileGeneratorTests : IDisposable
 {
-    private readonly string _tempFileName = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".txt");
+    private readonly string _testFilePath = Path.Combine(Path.GetTempPath(), "testFile.txt");
 
-    [Theory]
-    [InlineData(GeneratorType.Original)]
-    [InlineData(GeneratorType.Buffered)]
-    [InlineData(GeneratorType.Parallel)]
-    [InlineData(GeneratorType.MemoryMapped)]
-    public async Task GenerateFileAsync_CreatesFileOfExpectedSize(GeneratorType generatorType)
+    public FileGeneratorTests()
     {
-        const long expectedSizeInBytes = 10 * 1024; // 10 KB
-        var fileGenerator = GetFileGenerator(generatorType);
-
-        await fileGenerator.GenerateFileAsync(_tempFileName, expectedSizeInBytes);
-
-        var fileInfo = new FileInfo(_tempFileName);
-        Assert.True(fileInfo.Exists, "Generated file does not exist.");
-        Assert.True(fileInfo.Length >= expectedSizeInBytes, $"Generated file size is less than expected. Expected at least {expectedSizeInBytes} bytes, but was {fileInfo.Length} bytes.");
+        if (File.Exists(_testFilePath))
+            File.Delete(_testFilePath);
     }
 
-    [Theory]
-    [InlineData(GeneratorType.Original)]
-    [InlineData(GeneratorType.Buffered)]
-    [InlineData(GeneratorType.Parallel)]
-    [InlineData(GeneratorType.MemoryMapped)]
-    public async Task GenerateFileAsync_CreatesFileWithExpectedContentFormat(GeneratorType generatorType)
+    [Fact]
+    public void GenerateFile_ShouldCreateFileWithApproximateSize()
     {
-        const long sizeInBytes = 5 * 1024; // 5 KB
-        var fileGenerator = GetFileGenerator(generatorType);
+        var fileGenerator = new FileGenerator();
+        const long expectedSize = 1024; // 1 KB file
 
-        await fileGenerator.GenerateFileAsync(_tempFileName, sizeInBytes);
-        Assert.True(File.Exists(_tempFileName), "Generated file does not exist.");
+        fileGenerator.GenerateFile(_testFilePath, expectedSize);
 
-        var lines = await File.ReadAllLinesAsync(_tempFileName);
+        File.Exists(_testFilePath).Should().BeTrue();
+        var fileInfo = new FileInfo(_testFilePath);
+        fileInfo.Length.Should().BeGreaterOrEqualTo(expectedSize);
+    }
 
-        Assert.NotEmpty(lines);
+    [Fact]
+    public void GenerateFile_ShouldHaveCorrectLineFormat()
+    {
+        var fileGenerator = new FileGenerator();
+        const long fileSize = 1024; // 1 KB file
 
-        var regex = new Regex(@"^\d+\. .+$");
+        fileGenerator.GenerateFile(_testFilePath, fileSize);
 
+        File.Exists(_testFilePath).Should().BeTrue();
+        var lines = File.ReadAllLines(_testFilePath);
         foreach (var line in lines)
         {
-            var trimmedLine = line.TrimEnd('\r', '\n');
-            Assert.Matches(regex, trimmedLine);
+            line.Should().MatchRegex(@"^\d+\. .+$");
         }
-    }
-
-    private IFileGenerator GetFileGenerator(GeneratorType generatorType)
-    {
-        return generatorType switch
-        {
-            GeneratorType.Original => new FileGenerator(),
-            GeneratorType.Buffered => new FileGeneratorBuffered(),
-            GeneratorType.Parallel => new FileGeneratorParallel(),
-            GeneratorType.MemoryMapped => new FileGeneratorMemoryMapped(),
-            _ => throw new ArgumentOutOfRangeException(nameof(generatorType), generatorType, null),
-        };
     }
 
     public void Dispose()
     {
-        if (!File.Exists(_tempFileName))
-            return;
-        try
-        {
-            File.Delete(_tempFileName);
-        }
-        catch
-        {
-            // Ignore exceptions during cleanup
-        }
+        if (File.Exists(_testFilePath))
+            File.Delete(_testFilePath);
     }
 }

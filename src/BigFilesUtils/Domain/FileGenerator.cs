@@ -2,17 +2,17 @@
 
 namespace BigFilesUtils.Domain;
 
-public class FileGenerator : IFileGenerator
+public class FileGenerator
 {
     private static readonly string[] SampleStrings =
     [
         "Apple", "Banana is yellow", "Cherry is the best", "Something something something"
     ];
 
-    public async Task GenerateFileAsync(string filePath, long fileSizeInBytes)
+    public void GenerateFile(string filePath, long fileSizeInBytes)
     {
         var random = new Random();
-        await using var writer = new StreamWriter(filePath, false, Encoding.UTF8, 65536);
+        using var writer = new StreamWriter(filePath, false, Encoding.UTF8, 65536);
         long currentSize = 0;
         while (currentSize < fileSizeInBytes)
         {
@@ -20,7 +20,7 @@ public class FileGenerator : IFileGenerator
             var str = SampleStrings[random.Next(SampleStrings.Length)];
             var line = $"{number}. {str}";
 
-            await writer.WriteLineAsync(line);
+            writer.WriteLine(line);
             currentSize += Encoding.UTF8.GetByteCount(line + Environment.NewLine);
         }
     }

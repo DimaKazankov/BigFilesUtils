@@ -5,54 +5,39 @@ using BigFilesUtils.Domain;
 namespace BigFilesUtils.Benchmark;
 
 [MemoryDiagnoser]
-[MinColumn, MaxColumn, MeanColumn, MedianColumn, StdDevColumn, StdErrorColumn]
+[MinColumn, MaxColumn, MeanColumn, Q1Column, Q3Column, MedianColumn, StdDevColumn]
 [MarkdownExporterAttribute.GitHub]
 [RPlotExporter]
-[HtmlExporter]
-[CsvExporter]
 [GcServer(true)]
+[ShortRunJob]
 [Config(typeof(CustomConfig))]
-[Orderer(SummaryOrderPolicy.Declared)]
-[SimpleJob(launchCount: 5, warmupCount: 2, invocationCount: 3, iterationCount: 3)]
+[Orderer(SummaryOrderPolicy.FastestToSlowest)]
 public class FileGeneratorBenchmark
 {
+    private FileGenerator? _fileGenerator;
     private string? _fileName;
-    private IFileGenerator? _fileGenerator;
-
+    
     public static IEnumerable<FileSize> FileSizes =>
     [
-        new(100 * 1024 * 1024), // 100 MB
-        new(500 * 1024 * 1024), // 500 MB
-        new(1024 * 1024 * 1024), // 1 GB
-        //new(10L * 1024 * 1024 * 1024) // 10 GB
+        new(1024 * 1024),
+        new(100 * 1024L * 1024L),
+        new(1024L * 1024L * 1024L),
+        // new(10 * 1024L * 1024L * 1024L),
+        // new(100 * 1024 * 1024L * 1024L)
     ];
 
     [ParamsSource(nameof(FileSizes))]
     public FileSize FileSizeInBytes { get; set; }
 
-    [ParamsAllValues]
-    public GeneratorType Generator { get; set; }
-
     [GlobalSetup]
     public void Setup()
     {
-        _fileName = $"{FileSizeInBytes}_{Generator}_file.txt";
-
-        _fileGenerator = Generator switch
-        {
-            GeneratorType.Original => new FileGenerator(),
-            GeneratorType.Buffered => new FileGeneratorBuffered(),
-            GeneratorType.Parallel => new FileGeneratorParallel(),
-            GeneratorType.MemoryMapped => new FileGeneratorMemoryMapped(),
-            _ => throw new ArgumentOutOfRangeException()
-        };
+        _fileGenerator = new FileGenerator();
+        _fileName = $"{FileSizeInBytes}_file_generator_benchmark.txt";
     }
 
     [Benchmark]
-    public async Task GenerateFile()
-    {
-        await _fileGenerator!.GenerateFileAsync(_fileName!, FileSizeInBytes.Bytes);
-    }
+    public void GenerateFile() => _fileGenerator!.GenerateFile(_fileName!, FileSizeInBytes.Bytes);
 
     [GlobalCleanup]
     public void Cleanup()
