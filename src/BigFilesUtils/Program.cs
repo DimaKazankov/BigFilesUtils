@@ -18,7 +18,7 @@ public class Program
                  args.Contains("--size") || args.Contains("-s") ||
                  args.Contains("--help") || args.Contains("-h"))
         {
-            await RunFileGenerationOrSorting(args);
+            await RunLocalOperations(args);
         }
         else
         {
@@ -44,143 +44,187 @@ public class Program
             BenchmarkRunner.Run<FileSorterBenchmark>(config);
         }
     }
-    
-    static async Task RunFileGenerationOrSorting(string[] args)
+
+    static async Task RunLocalOperations(string[] args)
+    {
+        var size = "1GB";
+        var fileSizeInBytes = 1L * 1024 * 1024 * 1024; // Default 1 GB
+        var runGenerators = true;
+        var runSorters = true;
+        string? specificAlgorithm = null;
+
+        for (int i = 0; i < args.Length; i++)
         {
-            var algorithm = "Default";
-            var sizeInput = "1GB";
-            var fileSizeInBytes = 1L * 1024 * 1024 * 1024; // 1 GB
-            var isSorting = false;
-
-            // Parse arguments
-            for (var i = 0; i < args.Length; i++)
+            switch (args[i].ToLower())
             {
-                switch (args[i].ToLower())
-                {
-                    case "--algorithm":
-                    case "-a":
-                        if (i + 1 < args.Length)
-                            algorithm = args[++i];
-                        else
-                        {
-                            Console.WriteLine("Error: --algorithm requires a value.");
-                            ShowUsage();
-                            return;
-                        }
-                        break;
-
-                    case "--size":
-                    case "-s":
-                        if (i + 1 < args.Length)
-                        {
-                            sizeInput = args[++i];
-                            try
-                            {
-                                fileSizeInBytes = ParseFileSize(sizeInput);
-                            }
-                            catch (ArgumentException ex)
-                            {
-                                Console.WriteLine($"Error: {ex.Message}");
-                                ShowUsage();
-                                return;
-                            }
-                        }
-                        else
-                        {
-                            Console.WriteLine("Error: --size requires a value.");
-                            ShowUsage();
-                            return;
-                        }
-                        break;
-
-                    case "--sort":
-                        isSorting = true;
-                        break;
-
-                    case "--help":
-                    case "-h":
+                case "--size":
+                case "-s":
+                    if (i + 1 < args.Length)
+                    {
+                        size = args[++i];
+                        fileSizeInBytes = ParseFileSize(size);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Error: --size requires a value.");
                         ShowUsage();
                         return;
+                    }
 
-                    default:
-                        Console.WriteLine($"Unknown argument: {args[i]}");
+                    break;
+                case "--sort":
+                    runGenerators = false;
+                    runSorters = true;
+                    break;
+                case "--generator":
+                    runGenerators = true;
+                    runSorters = false;
+                    break;
+                case "--algorithm":
+                case "-a":
+                    if (i + 1 < args.Length)
+                    {
+                        specificAlgorithm = args[++i];
+                    }
+                    else
+                    {
+                        Console.WriteLine("Error: --algorithm requires a value.");
                         ShowUsage();
                         return;
-                }
-            }
+                    }
 
-            var sizeLabel = GetSizeLabel(fileSizeInBytes);
-            var fileName = $"{sizeLabel}_{algorithm}_file.txt";
-
-            if (isSorting)
-            {
-                await RunSorting(algorithm, fileName);
-            }
-            else
-            {
-                await RunFileGeneration(algorithm, fileName, fileSizeInBytes);
+                    break;
+                case "--help":
+                case "-h":
+                    ShowUsage();
+                    return;
             }
         }
+
+        if (specificAlgorithm != null)
+        {
+            await RunFileGenerationAlgorithm(specificAlgorithm, fileSizeInBytes);
+        }
+        else
+        {
+            if (runGenerators)
+            {
+                await RunAllGenerators(fileSizeInBytes);
+            }
+
+            if (runSorters)
+            {
+                await RunAllSorters(fileSizeInBytes);
+            }
+        }
+    }
+
+    static async Task RunAllGenerators(long fileSizeInBytes)
+    {
+        Console.WriteLine("========== File Generation Algorithms ==========");
+        var algorithms = new[] { "Original", "Buffered", "Parallel", "MemoryMapped" };
+        foreach (var algorithm in algorithms)
+        {
+            await RunFileGenerationAlgorithm(algorithm, fileSizeInBytes);
+        }
+
+        Console.WriteLine("================================================");
+    }
+
+    private static async Task RunFileGenerationAlgorithm(string algorithm, long fileSizeInBytes)
+    {
+        Console.WriteLine($"[{algorithm}]");
+        var sizeLabel = GetSizeLabel(fileSizeInBytes);
+        var fileName = $"{sizeLabel}_{algorithm}_file.txt";
+        await RunFileGeneration(algorithm, fileName, fileSizeInBytes);
+        Console.WriteLine();
+    }
+
+    static async Task RunAllSorters(long fileSizeInBytes)
+    {
+        Console.WriteLine("========== File Sorting Algorithms ==========");
+        var algorithms = new[] { "ExternalMerge", "KWayMerge", "ParallelSorter", "MemoryMappedSorter" };
+        var sizeLabel = GetSizeLabel(fileSizeInBytes);
+        var inputFileName = $"{sizeLabel}_Original_file.txt";
+
+        // Generate a file to sort if it doesn't exist
+        if (!File.Exists(inputFileName))
+        {
+            Console.WriteLine("Generating file for sorting...");
+            await RunFileGeneration("Original", inputFileName, fileSizeInBytes);
+            Console.WriteLine();
+        }
+
+        foreach (var algorithm in algorithms)
+        {
+            Console.WriteLine($"[{algorithm}]");
+            await RunSorting(algorithm, inputFileName, fileSizeInBytes);
+            Console.WriteLine();
+        }
+
+        Console.WriteLine("=============================================");
+    }
 
     static async Task RunFileGeneration(string algorithm, string fileName, long fileSizeInBytes)
+    {
+        IFileGenerator fileGenerator = algorithm.ToLower() switch
         {
-            IFileGenerator fileGenerator = algorithm switch
-            {
-                "Original" => new FileGenerator(),
-                "Buffered" => new FileGeneratorBuffered(),
-                "Parallel" => new FileGeneratorParallel(),
-                "MemoryMapped" => new FileGeneratorMemoryMapped(),
-                _ => new FileGenerator()
-            };
+            "original" => new FileGenerator(),
+            "buffered" => new FileGeneratorBuffered(),
+            "parallel" => new FileGeneratorParallel(),
+            "memorymapped" => new FileGeneratorMemoryMapped(),
+            _ => new FileGenerator()
+        };
 
-            Console.WriteLine($"Starting file generation: Algorithm = {algorithm}, Size = {GetSizeLabel(fileSizeInBytes)}");
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        Console.WriteLine(
+            $"Starting file generation: Algorithm = {algorithm}, Size = {GetSizeLabel(fileSizeInBytes)}");
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
-            try
-            {
-                await fileGenerator.GenerateFileAsync(fileName, fileSizeInBytes);
-                stopwatch.Stop();
-                Console.WriteLine($"File generated successfully: {fileName}");
-                Console.WriteLine($"File generation completed in {FormatElapsedTime(stopwatch.Elapsed)}.");
-            }
-            catch (Exception ex)
-            {
-                stopwatch.Stop();
-                Console.WriteLine($"Error during file generation: {ex.Message}");
-                Console.WriteLine($"File generation failed after {FormatElapsedTime(stopwatch.Elapsed)}.");
-            }
-        }
-
-        static async Task RunSorting(string algorithm, string fileName)
+        try
         {
-            IFileSorter fileSorter = algorithm switch
-            {
-                "ExternalMerge" => new ExternalMergeSorter(),
-                "KWayMerge" => new KWayMergeSorter(),
-                "Parallel" => new ParallelExternalSorter(),
-                "MemoryMapped" => new MemoryMappedSorter(),
-                _ => new ExternalMergeSorter()
-            };
-
-            var outputFileName = $"sorted_{fileName}";
-            Console.WriteLine($"Starting file sorting: Algorithm = {algorithm}, File = {fileName}");
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-
-            try
-            {
-                await fileSorter.SortFileAsync(fileName, outputFileName);
-                stopwatch.Stop();
-                Console.WriteLine($"File sorted successfully: {outputFileName}");
-                Console.WriteLine($"File sorting completed in {FormatElapsedTime(stopwatch.Elapsed)}.");
-            }
-            catch (Exception ex)
-            {
-                stopwatch.Stop();
-                Console.WriteLine($"Error during file sorting: {ex.Message}");
-                Console.WriteLine($"File sorting failed after {FormatElapsedTime(stopwatch.Elapsed)}.");
-            }
+            await fileGenerator.GenerateFileAsync(fileName, fileSizeInBytes);
+            stopwatch.Stop();
+            Console.WriteLine($"File generated successfully: {fileName}");
+            Console.WriteLine($"File generation completed in {FormatElapsedTime(stopwatch.Elapsed)}.");
         }
-    
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            Console.WriteLine($"Error during file generation: {ex.Message}");
+            Console.WriteLine($"File generation failed after {FormatElapsedTime(stopwatch.Elapsed)}.");
+        }
+    }
+
+    static async Task RunSorting(string algorithm, string fileName, long fileSizeInBytes)
+    {
+        IFileSorter fileSorter = algorithm.ToLower() switch
+        {
+            "externalmerge" => new ExternalMergeSorter(),
+            "kwaymerge" => new KWayMergeSorter(),
+            "parallelsorter" => new ParallelExternalSorter(),
+            "memorymappedsorter" => new MemoryMappedSorter(),
+            _ => new ExternalMergeSorter()
+        };
+
+        var outputFileName = $"sorted_{fileName}";
+        Console.WriteLine($"Starting file sorting: Algorithm = {algorithm}, File = {fileName}");
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+        try
+        {
+            await fileSorter.SortFileAsync(fileName, outputFileName);
+            stopwatch.Stop();
+            Console.WriteLine($"File sorted successfully: {outputFileName}");
+            Console.WriteLine($"File sorting completed in {FormatElapsedTime(stopwatch.Elapsed)}.");
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            Console.WriteLine($"Error during file sorting: {ex.Message}");
+            Console.WriteLine($"File sorting failed after {FormatElapsedTime(stopwatch.Elapsed)}.");
+        }
+    }
+
     static string FormatElapsedTime(TimeSpan elapsed)
     {
         return elapsed.TotalMinutes >= 1 ? $"{elapsed.TotalMinutes:F2} minutes" :
