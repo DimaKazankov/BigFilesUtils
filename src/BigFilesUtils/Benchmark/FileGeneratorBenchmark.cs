@@ -1,45 +1,28 @@
 ﻿using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Order;
-using BigFilesUtils.Domain;
 using BigFilesUtils.Domain.FileGenerator;
 
 namespace BigFilesUtils.Benchmark;
 
 [MemoryDiagnoser]
-[MinColumn, MaxColumn, MeanColumn, MedianColumn, StdDevColumn, StdErrorColumn]
-[MarkdownExporterAttribute.GitHub]
-[RPlotExporter]
-[HtmlExporter]
-[CsvExporter]
-[GcServer(true)]
 [Config(typeof(CustomConfig))]
-[Orderer(SummaryOrderPolicy.Declared)]
-[SimpleJob(launchCount: 5, warmupCount: 2, invocationCount: 3, iterationCount: 3)]
 public class FileGeneratorBenchmark
 {
-    private string? _fileName;
-    private IFileGenerator? _fileGenerator;
+    [ParamsSource(nameof(FileSizes))] public FileSize FileSizeInBytes { get; set; }
+
+    [ParamsAllValues] public GeneratorType Generator { get; set; }
 
     public static IEnumerable<FileSize> FileSizes =>
     [
         new(100 * 1024 * 1024), // 100 MB
-        new(500 * 1024 * 1024), // 500 MB
-        new(1024 * 1024 * 1024), // 1 GB
+        new(200 * 1024 * 1024), // 200 MB
+        //new(1024 * 1024 * 1024), // 1 GB
         //new(10L * 1024 * 1024 * 1024) // 10 GB
     ];
 
-    [ParamsSource(nameof(FileSizes))]
-    public FileSize FileSizeInBytes { get; set; }
-
-    [ParamsAllValues]
-    public GeneratorType Generator { get; set; }
-
-    [GlobalSetup]
-    public void Setup()
+    [Benchmark]
+    public async Task GenerateFile()
     {
-        _fileName = $"{FileSizeInBytes}_{Generator}_file.txt";
-
-        _fileGenerator = Generator switch
+        IFileGenerator fileGenerator = Generator switch
         {
             GeneratorType.Original => new FileGenerator(),
             GeneratorType.Buffered => new FileGeneratorBuffered(),
@@ -47,26 +30,15 @@ public class FileGeneratorBenchmark
             GeneratorType.MemoryMapped => new FileGeneratorMemoryMapped(),
             _ => throw new ArgumentOutOfRangeException()
         };
-    }
 
-    [Benchmark]
-    public async Task GenerateFile()
-    {
-        await _fileGenerator!.GenerateFileAsync(_fileName!, FileSizeInBytes.Bytes);
-    }
-
-    [GlobalCleanup]
-    public void Cleanup()
-    {
-        if (_fileName == null || !File.Exists(_fileName))
-            return;
+        var fileName = Path.GetTempFileName();
         try
         {
-            File.Delete(_fileName);
+            await fileGenerator.GenerateFileAsync(fileName, FileSizeInBytes.Bytes);
         }
-        catch (Exception ex)
+        finally
         {
-            Console.WriteLine($"Error deleting file {_fileName}: {ex.Message}");
+            File.Delete(fileName);
         }
     }
 }
