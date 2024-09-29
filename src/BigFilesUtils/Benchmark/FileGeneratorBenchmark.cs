@@ -21,7 +21,7 @@ public class FileGeneratorBenchmark
     public async Task GenerateFile()
     {
         var fileName = Path.GetTempFileName();
-        var fileGenerator =FileGeneratorFactory.GetFileGenerator(Generator);
+        var fileGenerator = FileGeneratorFactory.GetFileGenerator(Generator);
         try
         {
             await fileGenerator.GenerateFileAsync(fileName, FileSizeInBytes.Bytes);
