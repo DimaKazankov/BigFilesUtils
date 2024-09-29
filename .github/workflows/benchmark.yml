@@ -7,6 +7,9 @@ on:
   push:
     branches:
       - "*"
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
   workflow_dispatch:  # Allow manual triggering of the workflow
 
 jobs:
@@ -16,9 +19,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4.2.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      
+
       # Cache for .NET packages
       - name: Cache .NET packages
         uses: actions/cache@v3
@@ -29,84 +30,119 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
-      
+
       # Setup .NET environment
       - name: Setup .NET
         uses: actions/setup-dotnet@v4.0.1
         with:
           dotnet-version: '8.0.402'
-      
+
       # Setup R environment
       - name: Setup R
         uses: r-lib/actions/setup-r@v2
       
-      # Restore cache for R packages (before installation)
-      - name: Restore R package cache
+      # Cache R packages
+      - name: Cache R packages
         uses: actions/cache@v3
         with:
-          path: ~/R/x86_64-pc-linux-gnu-library
-          key: ${{ runner.os }}-R-packages-${{ hashFiles('.scripts/generate_plot.R') }}
+          path: ${{ env.R_LIBS_USER }}
+          key: ${{ runner.os }}-r-${{ hashFiles('**/DESCRIPTION') }}
           restore-keys: |
-            ${{ runner.os }}-R-packages-
-      
-      # Install R packages
+            ${{ runner.os }}-r-
+
+      # Install required R packages
       - name: Install R packages
         run: |
-          Rscript -e 'if (!require("ggplot2")) install.packages("ggplot2", repos="http://cran.rstudio.com")'
-          Rscript -e 'if (!require("reshape2")) install.packages("reshape2", repos="http://cran.rstudio.com")'
+          Rscript -e 'install.packages(c("ggplot2", "gplots"), repos="https://cloud.r-project.org")'
 
-      # Save R packages cache after installation
-      - name: Save R package cache
-        uses: actions/cache@v3
-        with:
-          path: ~/R/x86_64-pc-linux-gnu-library
-          key: ${{ runner.os }}-R-packages-${{ hashFiles('.scripts/generate_plot.R') }}
-      
-      # Restore .NET dependencies with caching
+      # Restore .NET dependencies
       - name: Restore .NET dependencies
         run: dotnet restore
-      
+
       # Build the project
       - name: Build the project
-        run: dotnet build --no-restore -c Release
-      
+        run: dotnet build -c Release --no-restore
+
+      # Run Tests
+      - name: Run Tests
+        run: dotnet test --no-build --verbosity normal -c Release
+
       # Publish the project
       - name: Publish
         run: dotnet publish -c Release --verbosity normal -o ./publish/
-      
-      # Archive the published artifacts
-      - name: Archive
-        uses: actions/upload-artifact@v4.4.0
-        with:
-          name: benchmarks_source
-          path: ./publish/*
-      
+
       # Run Benchmarks
       - name: Run Benchmarks
         run: dotnet "./publish/BigFilesUtils.dll" -f "*"
-      
-      # Run the R script to generate a plot
-      - name: Run R script to generate plot
+
+      # Clean docs directory
+      - name: Clean docs directory
         run: |
-          Rscript ./.scripts/generate_plot.R
-      
-      # Upload benchmark results as artifacts
-      - name: Upload benchmark results
-        uses: actions/upload-artifact@v4.4.0
-        with:
-          name: benchmark_results
-          path: ./BenchmarkDotNet.Artifacts/results/*
-      
-      # Commit Markdown report and plot to repository
-      - name: Commit Markdown report to repository
-        run: |
+          rm -rf docs/*
           mkdir -p docs/
-          mv BenchmarkDotNet.Artifacts/results/*.md docs/ || echo "No markdown file found!"
-          mv BenchmarkDotNet.Artifacts/results/*.png docs/ || echo "No plot file found!"
+
+      # Move benchmark results
+      - name: Move benchmark results
+        run: |
+          # Create docs directory if it doesn't exist
+          mkdir -p docs/
+          # Move markdown reports
+          mv BenchmarkDotNet.Artifacts/results/*-report-github.md docs/ || echo "No GitHub markdown report found!"
+          # Move barplot images
+          mv BenchmarkDotNet.Artifacts/results/*-barplot.png docs/ || echo "No barplot found!"
+          # Move additional plots
+          mv BenchmarkDotNet.Artifacts/results/*-measurement.png docs/ || echo "No measurement plot found!"
+          mv BenchmarkDotNet.Artifacts/results/*-distribution.png docs/ || echo "No distribution plot found!"
+          # Move CSV and HTML reports
+          mv BenchmarkDotNet.Artifacts/results/*.csv docs/ || echo "No CSV report found!"
+          mv BenchmarkDotNet.Artifacts/results/*.html docs/ || echo "No HTML report found!"
+      
+
+        # Update README.md with benchmark results
+      - name: Update README.md
+        run: |
+          # Remove existing benchmark results from README.md
+          sed -i '/<!-- BENCHMARK RESULTS START -->/,/<!-- BENCHMARK RESULTS END -->/d' README.md
+          # Add new benchmark results to README.md
+          echo '<!-- BENCHMARK RESULTS START -->' >> README.md
+          echo '' >> README.md
+          echo '## Benchmark Results' >> README.md
+          echo '' >> README.md
+          echo '*Last updated on '"$(date -u)"' UTC*' >> README.md
+          echo '' >> README.md
+          # Include the content of the GitHub report markdown
+          cat docs/*-report-github.md >> README.md
+          echo '' >> README.md
+          # Include the barplot image
+          for img in docs/*-barplot.png; do
+            echo "### Performance Barplot" >> README.md
+            echo "![Benchmark Barplot]($img)" >> README.md
+            echo '' >> README.md
+          done
+          # Include additional plots
+          for img in docs/*-measurement.png; do
+            echo "### Measurement Overhead Plot" >> README.md
+            echo "![Measurement Overhead Plot]($img)" >> README.md
+            echo '' >> README.md
+          done
+          for img in docs/*-distribution.png; do
+            echo "### Distribution Plot" >> README.md
+            echo "![Distribution Plot]($img)" >> README.md
+            echo '' >> README.md
+          done
+          echo '<!-- BENCHMARK RESULTS END -->' >> README.md
+      
+      
+        # Commit and push changes
+      - name: Commit and push changes
+        run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/*.md || echo "No markdown file to add!"
-          git add docs/*.png || echo "No plot file to add!"
-          git commit -m "Add benchmark markdown report and plot"
+          git add docs/*-report-github.md || echo "No markdown file to add!"
+          git add docs/*-barplot.png || echo "No barplot image to add!"
+          git add README.md
+          git commit -m "Update benchmark results in README"
           git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
