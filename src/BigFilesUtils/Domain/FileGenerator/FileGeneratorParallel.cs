@@ -18,7 +18,7 @@ public class FileGeneratorParallel : IFileGenerator
         var producerTasks = new List<Task>();
 
         // Producer tasks
-        for (var i = 0; i < Environment.ProcessorCount; i++)
+        for (int i = 0; i < Environment.ProcessorCount; i++)
         {
             var producerTask = Task.Run(() =>
             {
