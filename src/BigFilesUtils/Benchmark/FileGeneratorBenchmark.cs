@@ -13,6 +13,7 @@ namespace BigFilesUtils.Benchmark;
 [GcServer(true)]
 [Config(typeof(CustomConfig))]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
+[ShortRunJob]
 public class FileGeneratorBenchmark
 {
     private string? _fileName;
