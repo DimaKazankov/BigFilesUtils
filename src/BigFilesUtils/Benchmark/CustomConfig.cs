@@ -15,7 +15,7 @@ public class CustomConfig : ManualConfig
         AddColumn(TargetMethodColumn.Method, new ParamColumn("Generator"), new ParamColumn("FileSize"));
 
         SummaryStyle = BenchmarkDotNet.Reports.SummaryStyle.Default
-            .WithTimeUnit(TimeUnit.Millisecond)
+            .WithTimeUnit(TimeUnit.Second)
             .WithSizeUnit(SizeUnit.MB)
             .WithMaxParameterColumnWidth(50);
 
@@ -24,7 +24,7 @@ public class CustomConfig : ManualConfig
         AddColumn(BaselineRatioColumn.RatioMean);
 
         // Order benchmarks
-        WithOrderer(new DefaultOrderer(SummaryOrderPolicy.FastestToSlowest));
+        WithOrderer(new DefaultOrderer());
 
         // Keep existing exporters
         AddExporter(MarkdownExporter.GitHub);
