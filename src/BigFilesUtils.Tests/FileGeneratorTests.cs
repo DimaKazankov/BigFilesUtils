@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using BigFilesUtils.Benchmark;
 using BigFilesUtils.Domain;
+using BigFilesUtils.Domain.FileGenerator;
 
 namespace BigFilesUtils.Tests;
 

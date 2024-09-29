@@ -1,7 +1,7 @@
 ﻿using System.IO.MemoryMappedFiles;
 using System.Text;
 
-namespace BigFilesUtils.Domain;
+namespace BigFilesUtils.Domain.FileGenerator;
 
 public class FileGeneratorMemoryMapped : IFileGenerator
 {

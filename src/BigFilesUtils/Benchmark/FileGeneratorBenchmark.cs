@@ -1,6 +1,7 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Order;
 using BigFilesUtils.Domain;
+using BigFilesUtils.Domain.FileGenerator;
 
 namespace BigFilesUtils.Benchmark;
 

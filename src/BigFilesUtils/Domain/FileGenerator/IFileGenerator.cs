@@ -1,4 +1,4 @@
-﻿namespace BigFilesUtils.Domain;
+﻿namespace BigFilesUtils.Domain.FileGenerator;
 
 public interface IFileGenerator
 {
