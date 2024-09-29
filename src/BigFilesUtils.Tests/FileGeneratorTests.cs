@@ -1,5 +1,4 @@
 using System.Text.RegularExpressions;
-using BigFilesUtils.Benchmark;
 using BigFilesUtils.Domain.FileGenerator;
 
 namespace BigFilesUtils.Tests;
@@ -16,7 +15,7 @@ public class FileGeneratorTests : IDisposable
     public async Task GenerateFileAsync_CreatesFileOfExpectedSize(GeneratorType generatorType)
     {
         const long expectedSizeInBytes = 10 * 1024; // 10 KB
-        var fileGenerator = GetFileGenerator(generatorType);
+        var fileGenerator = FileGeneratorFactory.GetFileGenerator(generatorType);
 
         await fileGenerator.GenerateFileAsync(_tempFileName, expectedSizeInBytes);
 
@@ -33,7 +32,7 @@ public class FileGeneratorTests : IDisposable
     public async Task GenerateFileAsync_CreatesFileWithExpectedContentFormat(GeneratorType generatorType)
     {
         const long sizeInBytes = 5 * 1024; // 5 KB
-        var fileGenerator = GetFileGenerator(generatorType);
+        var fileGenerator = FileGeneratorFactory.GetFileGenerator(generatorType);
 
         await fileGenerator.GenerateFileAsync(_tempFileName, sizeInBytes);
         Assert.True(File.Exists(_tempFileName), "Generated file does not exist.");
@@ -49,18 +48,6 @@ public class FileGeneratorTests : IDisposable
             var trimmedLine = line.TrimEnd('\r', '\n');
             Assert.Matches(regex, trimmedLine);
         }
-    }
-
-    private IFileGenerator GetFileGenerator(GeneratorType generatorType)
-    {
-        return generatorType switch
-        {
-            GeneratorType.Original => new FileGenerator(),
-            GeneratorType.Buffered => new FileGeneratorBuffered(),
-            GeneratorType.Parallel => new FileGeneratorParallel(),
-            GeneratorType.MemoryMapped => new FileGeneratorMemoryMapped(),
-            _ => throw new ArgumentOutOfRangeException(nameof(generatorType), generatorType, null),
-        };
     }
 
     public void Dispose()

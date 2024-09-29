@@ -49,9 +49,9 @@ public class MemoryMappedSorter : IFileSorter
     {
         if (fileSize >= 3)
         {
-            byte b1 = accessor.ReadByte(0);
-            byte b2 = accessor.ReadByte(1);
-            byte b3 = accessor.ReadByte(2);
+            var b1 = accessor.ReadByte(0);
+            var b2 = accessor.ReadByte(1);
+            var b3 = accessor.ReadByte(2);
             if (b1 == 0xEF && b2 == 0xBB && b3 == 0xBF)
             {
                 Console.WriteLine("UTF-8 BOM detected and skipped.");

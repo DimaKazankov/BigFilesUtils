@@ -20,16 +20,8 @@ public class FileGeneratorBenchmark
     [Benchmark]
     public async Task GenerateFile()
     {
-        IFileGenerator fileGenerator = Generator switch
-        {
-            GeneratorType.Original => new FileGenerator(),
-            GeneratorType.Buffered => new FileGeneratorBuffered(),
-            GeneratorType.Parallel => new FileGeneratorParallel(),
-            GeneratorType.MemoryMapped => new FileGeneratorMemoryMapped(),
-            _ => throw new ArgumentOutOfRangeException()
-        };
-
         var fileName = Path.GetTempFileName();
+        var fileGenerator =FileGeneratorFactory.GetFileGenerator(Generator);
         try
         {
             await fileGenerator.GenerateFileAsync(fileName, FileSizeInBytes.Bytes);

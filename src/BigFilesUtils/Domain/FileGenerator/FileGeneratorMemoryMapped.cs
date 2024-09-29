@@ -3,13 +3,8 @@ using System.Text;
 
 namespace BigFilesUtils.Domain.FileGenerator;
 
-public class FileGeneratorMemoryMapped : IFileGenerator
+public class FileGeneratorMemoryMapped(string[] input) : IFileGenerator
 {
-    private static readonly string[] SampleStrings =
-    [
-        "Apple", "Banana is yellow", "Cherry is the best", "Something something something"
-    ];
-
     public async Task GenerateFileAsync(string filePath, long fileSizeInBytes) => await Task.Run(() => GenerateFile(filePath, fileSizeInBytes));
 
     public void GenerateFile(string filePath, long fileSizeInBytes)
@@ -34,8 +29,7 @@ public class FileGeneratorMemoryMapped : IFileGenerator
         while (true)
         {
             var number = random.Next(1, 1000000);
-            var str = SampleStrings[random.Next(SampleStrings.Length)];
-
+            var str = input[random.Next(input.Length)];
             var line = $"{number}. {str}";
 
             if (!isFirstLine)

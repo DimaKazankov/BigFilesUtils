@@ -1,4 +1,4 @@
-﻿namespace BigFilesUtils.Benchmark;
+﻿namespace BigFilesUtils.Domain.FileSorter;
 
 public enum SorterType
 {

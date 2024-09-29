@@ -26,28 +26,20 @@ public class FileSorterBenchmark
     ];
 
     [GlobalSetup]
-    public void Setup()
+    public async Task Setup()
     {
         _inputFileName = Path.GetTempFileName();
         _outputFileName = Path.GetTempFileName();
             
-        // Generate a file to sort
-        var fileGenerator = new FileGenerator();
-        fileGenerator.GenerateFileAsync(_inputFileName, FileSizeInBytes.Bytes).Wait();
+        string[] sampleStrings = ["Apple", "Banana is yellow", "Cherry is the best", "Something something something"];
+        var fileGenerator = new FileGeneratorBuffered(sampleStrings);
+        await fileGenerator.GenerateFileAsync(_inputFileName, FileSizeInBytes.Bytes);
     }
 
     [Benchmark]
     public async Task SortFile()
     {
-        IFileSorter fileSorter = Sorter switch
-        {
-            SorterType.ExternalMerge => new ExternalMergeSorter(),
-            SorterType.KWayMerge => new KWayMergeSorter(),
-            SorterType.Parallel => new ParallelExternalSorter(),
-            SorterType.MemoryMapped => new MemoryMappedSorter(),
-            _ => throw new ArgumentOutOfRangeException()
-        };
-
+        var fileSorter = FileSorterFactory.GetFileSorter(Sorter);
         await fileSorter.SortFileAsync(_inputFileName!, _outputFileName!);
     }
 
