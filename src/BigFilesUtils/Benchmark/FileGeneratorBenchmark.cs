@@ -12,7 +12,7 @@ namespace BigFilesUtils.Benchmark;
 [CsvExporter]
 [GcServer(true)]
 [Config(typeof(CustomConfig))]
-[Orderer(SummaryOrderPolicy.FastestToSlowest)]
+[Orderer(SummaryOrderPolicy.Declared)]
 [SimpleJob(launchCount: 5, warmupCount: 2, invocationCount: 3, iterationCount: 3)]
 public class FileGeneratorBenchmark
 {
