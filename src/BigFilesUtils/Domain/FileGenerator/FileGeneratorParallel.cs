@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Text;
 
-namespace BigFilesUtils.Domain;
+namespace BigFilesUtils.Domain.FileGenerator;
 
 public class FileGeneratorParallel : IFileGenerator
 {
@@ -18,7 +18,7 @@ public class FileGeneratorParallel : IFileGenerator
         var producerTasks = new List<Task>();
 
         // Producer tasks
-        for (int i = 0; i < Environment.ProcessorCount; i++)
+        for (var i = 0; i < Environment.ProcessorCount; i++)
         {
             var producerTask = Task.Run(() =>
             {

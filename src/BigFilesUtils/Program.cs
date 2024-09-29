@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Reflection;
 using BenchmarkDotNet.Running;
 using BigFilesUtils.Domain;
+using BigFilesUtils.Domain.FileGenerator;
 
 namespace BigFilesUtils;
 
