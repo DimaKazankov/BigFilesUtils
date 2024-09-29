@@ -23,7 +23,8 @@ public class FileGeneratorBenchmark
     [
         new(100 * 1024 * 1024), // 100 MB
         new(500 * 1024 * 1024), // 500 MB
-        new(1024 * 1024 * 1024) // 1 GB
+        new(1024 * 1024 * 1024), // 1 GB
+        //new(10L * 1024 * 1024 * 1024) // 10 GB
     ];
 
     [ParamsSource(nameof(FileSizes))]
@@ -48,9 +49,9 @@ public class FileGeneratorBenchmark
     }
 
     [Benchmark]
-    public void GenerateFile()
+    public async Task GenerateFile()
     {
-        _fileGenerator!.GenerateFileAsync(_fileName!, FileSizeInBytes.Bytes);
+        await _fileGenerator!.GenerateFileAsync(_fileName!, FileSizeInBytes.Bytes);
     }
 
     [GlobalCleanup]
