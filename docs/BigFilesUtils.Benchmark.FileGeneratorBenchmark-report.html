@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>BenchmarkRun-joined-2024-09-29-13-18-36</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet v0.14.0, Ubuntu 22.04.5 LTS (Jammy Jellyfish)
+AMD EPYC 7763, 1 CPU, 2 logical cores and 1 physical core
+.NET SDK 8.0.402
+  [Host]     : .NET 8.0.8 (8.0.824.36612), X64 RyuJIT AVX2
+  DefaultJob : .NET 8.0.8 (8.0.824.36612), X64 RyuJIT AVX2
+</code></pre>
+<pre><code></code></pre>
+
+<table>
+<thead><tr><th>Method</th><th>FileSizeInBytes</th><th>Generator</th><th>FileSize</th><th>Mean</th><th>Error</th><th>StdDev</th><th>StdErr</th><th>Median</th><th>Min</th><th>Q1</th><th>Q3</th><th>Max</th><th>Op/s</th><th>Rank</th><th>Gen0 </th><th>Gen1 </th><th>Gen2 </th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>GenerateFile</td><td>100.00 MB</td><td>Original</td><td>?</td><td>0.8735 s</td><td>0.0171 s</td><td>0.0277 s</td><td>0.0047 s</td><td>0.8734 s</td><td>0.8426 s</td><td>0.8488 s</td><td>0.8948 s</td><td>0.9626 s</td><td>1.1449</td><td>2</td><td>7000.0000</td><td>-</td><td>-</td><td>585.46 MB</td>
+</tr><tr><td>GenerateFile</td><td>100.00 MB</td><td>Buffered</td><td>?</td><td>0.7493 s</td><td>0.0114 s</td><td>0.0149 s</td><td>0.0030 s</td><td>0.7510 s</td><td>0.7021 s</td><td>0.7412 s</td><td>0.7560 s</td><td>0.7790 s</td><td>1.3346</td><td>1</td><td>66000.0000</td><td>66000.0000</td><td>66000.0000</td><td>500.79 MB</td>
+</tr><tr><td>GenerateFile</td><td>100.00 MB</td><td>Parallel</td><td>?</td><td>0.8326 s</td><td>0.0299 s</td><td>0.0814 s</td><td>0.0088 s</td><td>0.7971 s</td><td>0.7289 s</td><td>0.7899 s</td><td>0.8486 s</td><td>1.0442 s</td><td>1.2011</td><td>2</td><td>4000.0000</td><td>1000.0000</td><td>1000.0000</td><td>308.26 MB</td>
+</tr><tr><td>GenerateFile</td><td>100.00 MB</td><td>MemoryMapped</td><td>?</td><td>0.8941 s</td><td>0.0023 s</td><td>0.0018 s</td><td>0.0005 s</td><td>0.8938 s</td><td>0.8916 s</td><td>0.8929 s</td><td>0.8949 s</td><td>0.8976 s</td><td>1.1184</td><td>2</td><td>9000.0000</td><td>-</td><td>-</td><td>792.49 MB</td>
+</tr><tr><td>GenerateFile</td><td>200.00 MB</td><td>Original</td><td>?</td><td>1.9923 s</td><td>0.0147 s</td><td>0.0137 s</td><td>0.0036 s</td><td>1.9983 s</td><td>1.9520 s</td><td>1.9853 s</td><td>2.0008 s</td><td>2.0060 s</td><td>0.5019</td><td>4</td><td>14000.0000</td><td>-</td><td>-</td><td>1170.67 MB</td>
+</tr><tr><td>GenerateFile</td><td>200.00 MB</td><td>Buffered</td><td>?</td><td>1.7713 s</td><td>0.0328 s</td><td>0.0307 s</td><td>0.0079 s</td><td>1.7864 s</td><td>1.7129 s</td><td>1.7459 s</td><td>1.7954 s</td><td>1.8124 s</td><td>0.5646</td><td>3</td><td>133000.0000</td><td>133000.0000</td><td>133000.0000</td><td>1000.94 MB</td>
+</tr><tr><td>GenerateFile</td><td>200.00 MB</td><td>Parallel</td><td>?</td><td>2.2076 s</td><td>0.0783 s</td><td>0.2307 s</td><td>0.0231 s</td><td>2.2558 s</td><td>1.8424 s</td><td>1.9877 s</td><td>2.4264 s</td><td>2.6036 s</td><td>0.4530</td><td>4</td><td>8000.0000</td><td>7000.0000</td><td>2000.0000</td><td>680.49 MB</td>
+</tr><tr><td>GenerateFile</td><td>200.00 MB</td><td>MemoryMapped</td><td>?</td><td>2.0402 s</td><td>0.0137 s</td><td>0.0122 s</td><td>0.0033 s</td><td>2.0433 s</td><td>2.0026 s</td><td>2.0421 s</td><td>2.0457 s</td><td>2.0512 s</td><td>0.4901</td><td>4</td><td>19000.0000</td><td>-</td><td>-</td><td>1585.15 MB</td>
+</tr></tbody></table>
+</body>
+</html>

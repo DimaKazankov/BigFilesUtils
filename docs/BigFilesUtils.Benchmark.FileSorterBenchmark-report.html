@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>BenchmarkRun-joined-2024-09-29-14-31-41</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet v0.14.0, Ubuntu 22.04.5 LTS (Jammy Jellyfish)
+AMD EPYC 7763, 1 CPU, 2 logical cores and 1 physical core
+.NET SDK 8.0.402
+  [Host]     : .NET 8.0.8 (8.0.824.36612), X64 RyuJIT AVX2
+  DefaultJob : .NET 8.0.8 (8.0.824.36612), X64 RyuJIT AVX2
+</code></pre>
+<pre><code></code></pre>
+
+<table>
+<thead><tr><th>Method</th><th>FileSizeInBytes</th><th>Sorter </th><th>Generator</th><th>FileSize</th><th>Mean</th><th>Error</th><th>StdDev</th><th>StdErr</th><th>Min</th><th>Q1</th><th>Median</th><th>Q3</th><th>Max</th><th>Op/s</th><th>Rank</th><th>Gen0 </th><th>Gen1</th><th>Gen2</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>SortFile</td><td>100.00 MB</td><td>ExternalMerge</td><td>?</td><td>?</td><td>18.14 s</td><td>0.102 s</td><td>0.090 s</td><td>0.024 s</td><td>17.98 s</td><td>18.09 s</td><td>18.14 s</td><td>18.21 s</td><td>18.32 s</td><td>0.0551</td><td>1</td><td>254000.0000</td><td>12000.0000</td><td>3000.0000</td><td>20143.67 MB</td>
+</tr><tr><td>SortFile</td><td>100.00 MB</td><td>KWayMerge</td><td>?</td><td>?</td><td>17.78 s</td><td>0.115 s</td><td>0.108 s</td><td>0.028 s</td><td>17.64 s</td><td>17.69 s</td><td>17.76 s</td><td>17.85 s</td><td>18.04 s</td><td>0.0562</td><td>1</td><td>251000.0000</td><td>11000.0000</td><td>2000.0000</td><td>19965.79 MB</td>
+</tr><tr><td>SortFile</td><td>100.00 MB</td><td>Parallel</td><td>?</td><td>?</td><td>18.30 s</td><td>0.265 s</td><td>0.248 s</td><td>0.064 s</td><td>18.02 s</td><td>18.11 s</td><td>18.19 s</td><td>18.52 s</td><td>18.81 s</td><td>0.0546</td><td>1</td><td>255000.0000</td><td>12000.0000</td><td>3000.0000</td><td>20285.98 MB</td>
+</tr><tr><td>SortFile</td><td>100.00 MB</td><td>MemoryMapped</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td>
+</tr><tr><td>SortFile</td><td>200.00 MB</td><td>ExternalMerge</td><td>?</td><td>?</td><td>41.02 s</td><td>0.275 s</td><td>0.257 s</td><td>0.066 s</td><td>40.60 s</td><td>40.82 s</td><td>41.08 s</td><td>41.20 s</td><td>41.42 s</td><td>0.0244</td><td>3</td><td>508000.0000</td><td>24000.0000</td><td>5000.0000</td><td>40228.68 MB</td>
+</tr><tr><td>SortFile</td><td>200.00 MB</td><td>KWayMerge</td><td>?</td><td>?</td><td>41.50 s</td><td>0.316 s</td><td>0.280 s</td><td>0.075 s</td><td>40.92 s</td><td>41.52 s</td><td>41.61 s</td><td>41.65 s</td><td>41.80 s</td><td>0.0241</td><td>3</td><td>505000.0000</td><td>22000.0000</td><td>3000.0000</td><td>40218.93 MB</td>
+</tr><tr><td>SortFile</td><td>200.00 MB</td><td>Parallel</td><td>?</td><td>?</td><td>34.76 s</td><td>0.301 s</td><td>0.281 s</td><td>0.073 s</td><td>34.34 s</td><td>34.53 s</td><td>34.76 s</td><td>34.98 s</td><td>35.20 s</td><td>0.0288</td><td>2</td><td>509000.0000</td><td>31000.0000</td><td>3000.0000</td><td>40502.52 MB</td>
+</tr><tr><td>SortFile</td><td>200.00 MB</td><td>MemoryMapped</td><td>?</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>?</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td>
+</tr></tbody></table>
+</body>
+</html>
