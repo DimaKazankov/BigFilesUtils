@@ -1,4 +1,4 @@
-﻿namespace BigFilesUtils.Benchmark;
+﻿namespace BigFilesUtils.Domain.FileGenerator;
 
 public enum GeneratorType
 {

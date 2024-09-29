@@ -3,13 +3,8 @@ using System.Text;
 
 namespace BigFilesUtils.Domain.FileGenerator;
 
-public class FileGeneratorParallel : IFileGenerator
+public class FileGeneratorParallel(string[] input) : IFileGenerator
 {
-    private static readonly string[] SampleStrings =
-    [
-        "Apple", "Banana is yellow", "Cherry is the best", "Something something something"
-    ];
-
     public async Task GenerateFileAsync(string filePath, long fileSizeInBytes)
     {
         var totalBytesGenerated = 0L;
@@ -18,7 +13,7 @@ public class FileGeneratorParallel : IFileGenerator
         var producerTasks = new List<Task>();
 
         // Producer tasks
-        for (int i = 0; i < Environment.ProcessorCount; i++)
+        for (var i = 0; i < Environment.ProcessorCount; i++)
         {
             var producerTask = Task.Run(() =>
             {
@@ -29,7 +24,7 @@ public class FileGeneratorParallel : IFileGenerator
                         break;
 
                     var number = random.Next(1, 1000000);
-                    var str = SampleStrings[random.Next(SampleStrings.Length)];
+                    var str = input[random.Next(input.Length)];
                     var line = $"{number}. {str}{Environment.NewLine}";
 
                     var byteCount = Encoding.UTF8.GetByteCount(line);
