@@ -6,12 +6,12 @@ public readonly struct FileSize(long bytes)
 
     public override string ToString()
     {
-        const double GB = 1024 * 1024 * 1024;
-        const double MB = 1024 * 1024;
-        const double KB = 1024;
+        const double gb = 1024 * 1024 * 1024;
+        const double mb = 1024 * 1024;
+        const double kb = 1024;
 
-        return Bytes >= GB ? $"{Bytes / GB:F2} GB" :
-            Bytes >= MB ? $"{Bytes / MB:F2} MB" :
-            Bytes >= KB ? $"{Bytes / KB:F2} KB" : $"{Bytes} B";
+        return Bytes >= gb ? $"{Bytes / gb:F2} GB" :
+            Bytes >= mb ? $"{Bytes / mb:F2} MB" :
+            Bytes >= kb ? $"{Bytes / kb:F2} KB" : $"{Bytes} B";
     }
 }

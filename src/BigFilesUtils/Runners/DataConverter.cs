@@ -1,4 +1,6 @@
-﻿namespace BigFilesUtils.Runners;
+﻿using BigFilesUtils.Benchmark;
+
+namespace BigFilesUtils.Runners;
 
 public static class DataConverter
 {
@@ -38,14 +40,5 @@ public static class DataConverter
 
     
 
-    public static string ToFileSizeLabel(this long bytes)
-    {
-        const double GB = 1024 * 1024 * 1024;
-        const double MB = 1024 * 1024;
-        const double KB = 1024;
-
-        return bytes >= GB ? $"{bytes / GB:F2}GB" :
-            bytes >= MB ? $"{bytes / MB:F2}MB" :
-            bytes >= KB ? $"{bytes / KB:F2}KB" : $"{bytes}B";
-    }
+    public static string ToFileSizeLabel(this long bytes) => new FileSize(bytes).ToString();
 }

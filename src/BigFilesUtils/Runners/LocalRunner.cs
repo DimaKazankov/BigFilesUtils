@@ -66,28 +66,14 @@ public class LocalRunner
 
     private static async Task SortForAlgorithm(string algorithm, string inputFileName)
     {
-        IFileSorter fileSorter = algorithm.ToLower() switch
-        {
-            "externalmerge" => new ExternalMergeSorter(),
-            "kwaymerge" => new KWayMergeSorter(),
-            "parallelsorter" => new ParallelExternalSorter(),
-            "memorymappedsorter" => new MemoryMappedSorter(),
-            _ => new ExternalMergeSorter()
-        };
+        var fileSorter = FileSorterFactory.GetFileSorter(algorithm);
         var outputFileName = $"sorted_{inputFileName}";
         await fileSorter.SortFileAsync(inputFileName, outputFileName);
     }
 
     private static async Task GenerateForAlgorithm(long fileSizeInBytes, string fileName, string algorithm)
     {
-        IFileGenerator fileGenerator = algorithm.ToLower() switch
-        {
-            "original" => new FileGenerator(),
-            "buffered" => new FileGeneratorBuffered(),
-            "parallel" => new FileGeneratorParallel(),
-            "memorymapped" => new FileGeneratorMemoryMapped(),
-            _ => new FileGenerator()
-        };
+        var fileGenerator = FileGeneratorFactory.GetFileGenerator(algorithm);
         await fileGenerator.GenerateFileAsync(fileName, fileSizeInBytes);
     }
 }
