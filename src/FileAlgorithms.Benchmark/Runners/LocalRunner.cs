@@ -43,7 +43,7 @@ public class LocalRunner
         if (runGenerators)
         {
             await ConsoleWriter.WrapAlgorithmExecution(
-                ["Original", "Buffered", "Parallel", "MemoryMapped"],
+                ["Original", "Buffered", "ByteChunksParallel", "Parallel", "MemoryMapped"],
                 fileSizeInBytes,
                 async algorithm =>
                 {

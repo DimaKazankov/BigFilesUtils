@@ -12,6 +12,7 @@ public class FileGeneratorTests : IDisposable
     [InlineData(GeneratorType.Original)]
     [InlineData(GeneratorType.Buffered)]
     [InlineData(GeneratorType.Parallel)]
+    [InlineData(GeneratorType.ByteChunksParallel)]
     [InlineData(GeneratorType.MemoryMapped)]
     public async Task GenerateFileAsync_CreatesFileOfExpectedSize(GeneratorType generatorType)
     {
@@ -29,6 +30,7 @@ public class FileGeneratorTests : IDisposable
     [InlineData(GeneratorType.Original)]
     [InlineData(GeneratorType.Buffered)]
     [InlineData(GeneratorType.Parallel)]
+    [InlineData(GeneratorType.ByteChunksParallel)]
     [InlineData(GeneratorType.MemoryMapped)]
     public async Task GenerateFileAsync_CreatesFileWithExpectedContentFormat(GeneratorType generatorType)
     {

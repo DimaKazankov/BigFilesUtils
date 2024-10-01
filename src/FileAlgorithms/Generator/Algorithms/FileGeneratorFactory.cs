@@ -11,6 +11,7 @@ public static class FileGeneratorFactory
             GeneratorType.Original => new FileGenerator(SampleStrings),
             GeneratorType.Buffered => new FileGeneratorBuffered(SampleStrings, 1048576),
             GeneratorType.Parallel => new FileGeneratorParallel(SampleStrings),
+            GeneratorType.ByteChunksParallel => new FileGeneratorParallelByteChunks(SampleStrings),
             GeneratorType.MemoryMapped => new FileGeneratorMemoryMapped(SampleStrings),
             _ => throw new ArgumentOutOfRangeException()
         };
@@ -23,6 +24,7 @@ public static class FileGeneratorFactory
             "original" => new FileGenerator(SampleStrings),
             "buffered" => new FileGeneratorBuffered(SampleStrings, 1048576),
             "parallel" => new FileGeneratorParallel(SampleStrings),
+            "bytechunksparallel" => new FileGeneratorParallelByteChunks(SampleStrings),
             "memorymapped" => new FileGeneratorMemoryMapped(SampleStrings),
             _ => new FileGenerator(SampleStrings)
         };

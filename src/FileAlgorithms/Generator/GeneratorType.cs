@@ -5,5 +5,6 @@ public enum GeneratorType
     Original,
     Buffered,
     Parallel,
+    ByteChunksParallel,
     MemoryMapped
 }
