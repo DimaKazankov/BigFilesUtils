@@ -5,5 +5,6 @@ public enum SorterMethod
     ExternalMerge,
     KWayMerge,
     Parallel,
-    MemoryMapped
+    MemoryMapped,
+    ChunkedMemoryMapped,
 }

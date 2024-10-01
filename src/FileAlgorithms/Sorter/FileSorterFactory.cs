@@ -13,6 +13,7 @@ public static class FileSorterFactory
             SorterMethod.KWayMerge => new KWayMergeFileSorter(sorter),
             SorterMethod.Parallel => new ParallelExternalFileSorter(sorter),
             SorterMethod.MemoryMapped => new MemoryMappedFileSorter(sorter),
+            SorterMethod.ChunkedMemoryMapped => new ChunkedMemoryMappedFileSorter(sorter),
             _ => throw new ArgumentOutOfRangeException()
         };
     }
@@ -25,6 +26,7 @@ public static class FileSorterFactory
             "kwaymerge" => new KWayMergeFileSorter(sorter),
             "parallelsorter" => new ParallelExternalFileSorter(sorter),
             "memorymappedsorter" => new MemoryMappedFileSorter(sorter),
+            "chunkedmemorymapped" => new ChunkedMemoryMappedFileSorter(sorter),
             _ => throw new ArgumentOutOfRangeException()
         };
         return fileSorter;

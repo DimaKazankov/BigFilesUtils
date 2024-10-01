@@ -33,10 +33,12 @@ public class FileSorterTests : IDisposable
     [InlineData(SorterMethod.KWayMerge, typeof(QuickSorter))]
     [InlineData(SorterMethod.Parallel, typeof(QuickSorter))]
     [InlineData(SorterMethod.MemoryMapped, typeof(QuickSorter))]
+    [InlineData(SorterMethod.ChunkedMemoryMapped, typeof(QuickSorter))]
     [InlineData(SorterMethod.ExternalMerge, typeof(DefaultSorter))]
     [InlineData(SorterMethod.KWayMerge, typeof(DefaultSorter))]
     [InlineData(SorterMethod.Parallel, typeof(DefaultSorter))]
     [InlineData(SorterMethod.MemoryMapped, typeof(DefaultSorter))]
+    [InlineData(SorterMethod.ChunkedMemoryMapped, typeof(DefaultSorter))]
     public async Task SortFile_CorrectlySortsLines(SorterMethod sorterMethod, Type sorterType)
     {
         var inputLines = new[]

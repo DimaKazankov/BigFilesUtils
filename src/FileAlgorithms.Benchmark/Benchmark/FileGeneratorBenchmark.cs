@@ -1,6 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
-using BenchmarkDotNet.Order;
 using FileAlgorithms.Generator;
 using FileAlgorithms.Generator.Algorithms;
 
