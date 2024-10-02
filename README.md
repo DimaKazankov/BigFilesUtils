@@ -44,102 +44,85 @@ The project is organized into several namespaces:
 
 ## Benchmarking results
 
-## GitHub benchmark results are regenerating on every pipeline run: [GitHub benchmark results](.docs/GitHubResults.md)
+### GitHub benchmark results are regenerating on every pipeline run: [GitHub benchmark results](.docs/GitHubResults.md)
 
-Github runner machine info: **AMD EPYC 7763, 1 CPU, 2 logical cores and 1 physical core**
+#### System Specifications
+- AMD EPYC 7763, 1 CPU, 2 logical cores and 1 physical core
 
-### File Generation Algorithms
+#### File Generation Algorithms
 
-#### 1GB File Generation:
+##### 1 GB Files
 
-1. **Parallel**: Fastest (5.6-5.8s)
-    - Utilizes multi-threading effectively
-    - Lowest memory allocation (4100MB)
+| Method | Performance | Memory Allocation | Notes |
+|--------|-------------|-------------------|-------|
+| Parallel | 5.6-5.8s (fastest) | 4100 MB (lowest) | Utilizes multi-threading effectively |
+| Buffered | 7.4-8.2s | 5125 MB | Efficient use of StringBuilder for buffering |
+| Original | 8.4-8.9s | 5992 MB | Simple implementation, but less efficient |
+| MemoryMapped | 9.9-10.2s (slowest) | 8115 MB (highest) | Unexpected slower performance for large files |
 
-2. **Buffered**: Second fastest (7.4-8.2s)
-    - Efficient use of StringBuilder for buffering
-    - Higher memory allocation due to buffer (5125MB)
+##### 100 MB Files
 
-3. **Original**: Third (8.4-8.9s)
-    - Simple implementation, but less efficient
-    - Moderate memory allocation (5992MB)
+| Method | Performance | Notes |
+|--------|-------------|-------|
+| Parallel | 0.54-0.55s (fastest) | Consistent performance across file sizes |
+| Buffered | 0.74-0.76s | Maintains efficiency for smaller files |
+| Original | 0.82-0.84s | Performance gap narrows for smaller files |
+| MemoryMapped | 0.89-0.90s (slowest) | Performance improves relative to other methods for smaller files |
 
-4. **MemoryMapped**: Slowest (9.9-10.2s)
-    - Unexpected slower performance for large files
-    - Highest memory allocation (8115MB)
+#### File Sorting Algorithms
 
-### 100MB File Generation:
+##### 100 MB Files
 
-1. **Parallel**: Remains fastest (0.54-0.55s)
-    - Consistent performance across file sizes
+| Method | Performance | Notes |
+|--------|-------------|-------|
+| MemoryMapped (Default) | 17.4-17.6s (fastest) | Efficient for this file size, lower memory allocation |
+| ExternalMerge (Default) | 18.3-18.5s | Consistently good performance |
+| Parallel (Default) | 18.6-19.2s | Fast with Default sorter |
+| Parallel (Quick) | 20.1-20.4s | Slower with Quick sorter |
+| KWayMerge (Default) | 18.9-19.2s | Similar to ExternalMerge, slightly slower |
+| KWayMerge (Quick) | 20.5-21.5s | Slower with Quick sorter |
+| ChunkedMemoryMapped | 20.5-22.4s (slowest) | Overhead of chunking might not be beneficial for this file size |
 
-2. **Buffered**: Second fastest (0.74-0.76s)
-    - Maintains efficiency for smaller files
+##### 50 MB Files
 
-3. **Original**: Third (0.82-0.84s)
-    - Performance gap narrows for smaller files
+| Method | Performance | Notes |
+|--------|-------------|-------|
+| ChunkedMemoryMapped (Default) | 7.1-7.2s (fastest) | Performs better on smaller files, lowest memory allocation |
+| MemoryMapped (Default) | 8.1-8.2s | Consistent performance across file sizes |
+| ExternalMerge, KWayMerge, Parallel | 8.6-8.9s | Less differentiation for smaller files |
+| Quick sorter variants | Generally slower | Consistently underperforms across all methods |
 
-4. **MemoryMapped**: Still slowest (0.89-0.90s)
-    - Performance improves relative to other methods for smaller files
-
-### File Sorting Algorithms
-
-#### 100MB File Sorting:
-
-1. **MemoryMapped (Default)**: Fastest (17.4-17.6s)
-    - Efficient for this file size
-    - Lower memory allocation compared to other methods
-
-2. **ExternalMerge (Default)**: Second fastest (18.3-18.5s)
-    - Consistently good performance
-
-3. **Parallel**: Mixed results
-    - With Default sorter: Fast (18.6-19.2s)
-    - With Quick sorter: Slower (20.1-20.4s)
-
-4. **KWayMerge**: Similar to ExternalMerge
-    - Slightly slower with Default sorter (18.9-19.2s)
-    - Slower with Quick sorter (20.5-21.5s)
-
-5. **ChunkedMemoryMapped**: Slowest for 100MB (20.5-22.4s)
-    - Overhead of chunking might not be beneficial for this file size
-
-#### 50MB File Sorting:
-
-1. **ChunkedMemoryMapped (Default)**: Fastest (7.1-7.2s)
-    - Performs better on smaller files
-    - Lowest memory allocation
-
-2. **MemoryMapped (Default)**: Second fastest (8.1-8.2s)
-    - Consistent performance across file sizes
-
-3. **ExternalMerge, KWayMerge, Parallel**: Similar performance (8.6-8.9s)
-    - Less differentiation for smaller files
-
-4. **Quick sorter variants**: Generally slower across all methods
-
-### Key Observations:
+#### Key Observations
 
 1. **Parallel processing** is most effective for file generation, especially for larger files.
 2. **Memory-mapped** approaches are more efficient for sorting, particularly for smaller files.
 3. The **Default sorter** generally outperforms the **Quick sorter** across all methods.
 4. **ChunkedMemoryMapped** shows interesting behavior:
-    - Poor performance for larger files (100MB)
-    - Best performance for smaller files (50MB)
+   - Poor performance for larger files (100MB)
+   - Best performance for smaller files (50MB)
 5. The choice between **ExternalMerge**, **KWayMerge**, and **Parallel** sorting depends on the specific file size and system characteristics.
 
+#### Conclusions
 
-## Manual run on my machine: [My local machine benchmark results](.docs/MyLocalMachineResults.md)
-# File Generation and Sorting Benchmark Analysis
+- For file generation, the Parallel method is superior, especially for large files.
+- For sorting, the choice of method depends on file size:
+   - For larger files (100MB), MemoryMapped with Default sorter is most efficient.
+   - For smaller files (50MB), ChunkedMemoryMapped with Default sorter performs best.
+- The Default sorter consistently outperforms the Quick sorter, suggesting it might be better optimized for the given data characteristics.
+- The effectiveness of different methods varies with file size, highlighting the importance of benchmarking for specific use cases.
 
-## System Specifications
+
+### Manual run on my machine: [My local machine benchmark results](.docs/MyLocalMachineResults.md)
+#### File Generation and Sorting Benchmark Analysis
+
+##### System Specifications
 - RAM: 32GB
 - Processor: Intel(R) Core(TM) i7-6820HQ CPU @ 2.70GHz
 - Cores: 4 Core(s), 8 Logical Processor(s)
 
-## File Generation Benchmarks
+#### File Generation Benchmarks
 
-### 1 GB Files
+##### 1 GB Files
 
 | Method | Performance | Memory Allocation |
 |--------|-------------|-------------------|
@@ -151,7 +134,7 @@ Github runner machine info: **AMD EPYC 7763, 1 CPU, 2 logical cores and 1 physic
 - Parallel generator is significantly faster than other methods.
 - Memory allocation is lowest for Parallel and highest for MemoryMapped.
 
-### 100 MB Files
+##### 100 MB Files
 
 | Method | Performance | Memory Allocation |
 |--------|-------------|-------------------|
@@ -162,22 +145,22 @@ Github runner machine info: **AMD EPYC 7763, 1 CPU, 2 logical cores and 1 physic
 
 - Performance ranking is similar to 1 GB files, but with scaled-down memory allocation.
 
-## File Sorting Benchmarks
+#### File Sorting Benchmarks
 
-### 100 MB Files
+##### 100 MB Files
 
 - Performance range: 26-38 seconds for most methods
 - MemoryMapped with Default sorter: Generally fastest (26-27s)
 - Quick sorter: Often slower than the Default sorter
 - Parallel sorting: No significant improvements, likely due to overhead
 
-### 50 MB Files
+##### 50 MB Files
 
 - Sorting times: 11-15 seconds for most methods
 - ChunkedMemoryMapped and MemoryMapped: Generally faster (11-13s)
 - Quick sorter: Often slower than the Default sorter
 
-## General Observations
+#### General Observations
 
 1. Parallel generator: Extremely efficient for file generation, but advantage doesn't translate to sorting.
 2. MemoryMapped methods: Perform well for sorting, especially with smaller file sizes.
@@ -185,25 +168,18 @@ Github runner machine info: **AMD EPYC 7763, 1 CPU, 2 logical cores and 1 physic
 4. .NET 8.0 vs default runtime: Generally small performance difference, with some exceptions.
 5. Memory allocation: Varies significantly between methods, with Parallel and MemoryMapped often using more memory.
 
-## Analysis
+#### Analysis
 
 - The Parallel generator's efficiency in file generation is likely due to full utilization of multiple cores.
 - High RAM allows for efficient use of memory-mapped files, explaining their good sorting performance.
 - For very large files, the advantage of memory-mapped methods might diminish due to increased reliance on disk I/O.
 
-## Conclusions
+#### Conclusions
 
 - For fast file generation: Parallel method is superior.
 - For sorting: MemoryMapped or ChunkedMemoryMapped methods offer best performance, especially for smaller files.
 - Default sorter generally outperforms Quick sorter, which warrants further investigation.
 
-## Recommendations
-
-The choice of method depends on the specific use case:
-1. Prioritize Parallel method for file generation tasks.
-2. Use MemoryMapped or ChunkedMemoryMapped for sorting, particularly with files that fit comfortably in RAM.
-3. Consider using the Default sorter over the Quick sorter unless specific data characteristics suggest otherwise.
-4. For large-scale operations, balance between memory usage and performance based on available system resources.
 
 ## Features
 
