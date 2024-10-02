@@ -26,7 +26,7 @@ public static class FileSorterFactory
             "kwaymerge" => new KWayMergeFileSorter(sorter),
             "parallelsorter" => new ParallelExternalFileSorter(sorter),
             "memorymappedsorter" => new MemoryMappedFileSorter(sorter),
-            "chunkedmemorymapped" => new ChunkedMemoryMappedFileSorter(sorter),
+            "chunkedmemorymappedsorter" => new ChunkedMemoryMappedFileSorter(sorter),
             _ => throw new ArgumentOutOfRangeException()
         };
         return fileSorter;
