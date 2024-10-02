@@ -91,15 +91,15 @@ WarmupCount=3
 | **SortFile** | **ShortRun**          | **50.00 MB**        | **ChunkedMemoryMapped** | **Quick**        |  **7.967 s** | **3.809 s** | **0.2088 s** | **0.1205 s** |  **7.737 s** |  **7.878 s** |  **8.020 s** |  **8.082 s** |  **8.144 s** | **0.1255** |    **1** | **119000.0000** |  **5000.0000** | **2000.0000** |   **9395.1 MB** |
 | SortFile | ShortRun-.NET 8.0 | 50.00 MB        | ChunkedMemoryMapped | Quick        |  7.981 s | 1.313 s | 0.0720 s | 0.0416 s |  7.917 s |  7.942 s |  7.966 s |  8.012 s |  8.059 s | 0.1253 |    1 | 125000.0000 |  6000.0000 | 3000.0000 |     9783 MB |
 ### Performance Barplot
-![Benchmark Barplot](.docs/data/FileAlgorithms.Benchmark.Benchmark.FileGeneratorBenchmark-barplot.png)
+![Benchmark Barplot](./data/FileAlgorithms.Benchmark.Benchmark.FileGeneratorBenchmark-barplot.png)
 
 ### Performance Barplot
-![Benchmark Barplot](.docs/data/FileAlgorithms.Benchmark.Benchmark.FileSorterBenchmark-barplot.png)
+![Benchmark Barplot](./data/FileAlgorithms.Benchmark.Benchmark.FileSorterBenchmark-barplot.png)
 
 ### Performance Boxplot
-![Benchmark Boxplot](.docs/data/FileAlgorithms.Benchmark.Benchmark.FileGeneratorBenchmark-boxplot.png)
+![Benchmark Boxplot](./data/FileAlgorithms.Benchmark.Benchmark.FileGeneratorBenchmark-boxplot.png)
 
 ### Performance Boxplot
-![Benchmark Boxplot](.docs/data/FileAlgorithms.Benchmark.Benchmark.FileSorterBenchmark-boxplot.png)
+![Benchmark Boxplot](./data/FileAlgorithms.Benchmark.Benchmark.FileSorterBenchmark-boxplot.png)
 
 <!-- BENCHMARK RESULTS END -->
