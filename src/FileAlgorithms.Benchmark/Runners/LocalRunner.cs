@@ -43,7 +43,7 @@ public class LocalRunner
         if (runGenerators)
         {
             await ConsoleWriter.WrapAlgorithmExecution(
-                ["Original", "Buffered", "ByteChunksParallel", "Parallel", "MemoryMapped"],
+                ["Original", "Buffered", "Parallel", "MemoryMapped"],
                 fileSizeInBytes,
                 async algorithm =>
                 {
@@ -59,7 +59,7 @@ public class LocalRunner
             await GenerateForAlgorithm(fileSizeInBytes, inputFileName, "Buffered");
 
             await ConsoleWriter.WrapAlgorithmExecution(
-                ["ExternalMerge", "KWayMerge", "ParallelSorter", "MemoryMappedSorter"],
+                ["ExternalMerge", "KWayMerge", "ParallelSorter", "MemoryMappedSorter", "ChunkedMemoryMappedSorter"],
                 fileSizeInBytes,
                 async algorithm => await SortForAlgorithm(algorithm, inputFileName));
         }
