@@ -8,7 +8,7 @@ on:
     branches:
       - "*"
     paths-ignore:
-      - 'README.md'
+      - '.docs/GitHubResults.md'
       - 'docs/**'
   workflow_dispatch:  # Allow manual triggering of the workflow
 
@@ -52,11 +52,11 @@ jobs:
         run: |
           dotnet publish -c Release --verbosity normal -o ./publish/
 
-      # Clean docs directory
-      - name: Clean docs directory
+      # Clean docs data directory
+      - name: Clean docs data directory
         run: |
-          rm -rf docs/*
-          mkdir -p docs/
+          rm -rf .docs/data/*
+          mkdir -p .docs/data/
           
       - name: Run Benchmarks
         run: |
@@ -68,61 +68,61 @@ jobs:
         run: |
           find BenchmarkDotNet.Artifacts/results/* -type f | while IFS= read -r f; do
             if [[ "$f" == *-report-github.md || "$f" == *-barplot.png || "$f" == *-boxplot.png ]]; then
-              mv "$f" docs/
+              mv "$f" .docs/data/
             fi
           done
           rm -rf BenchmarkDotNet.Artifacts/
 
-      # Update README.md with benchmark results
-      - name: Update README.md
+      # Update .docs/GitHubResults.md with benchmark results
+      - name: Update .docs/GitHubResults.md
         run: |
-          # Remove existing benchmark results from README.md
-          sed -i '/<!-- BENCHMARK RESULTS START -->/,/<!-- BENCHMARK RESULTS END -->/d' README.md
-          # Add new benchmark results to README.md
-          echo '<!-- BENCHMARK RESULTS START -->' >> README.md
-          echo '' >> README.md
-          echo '## Benchmark Results' >> README.md
-          echo '' >> README.md
-          echo '*Last updated on '"$(date -u)"' UTC*' >> README.md
-          echo '' >> README.md
+          # Remove existing benchmark results from .docs/GitHubResults.md
+          sed -i '/<!-- BENCHMARK RESULTS START -->/,/<!-- BENCHMARK RESULTS END -->/d' .docs/GitHubResults.md
+          # Add new benchmark results to .docs/GitHubResults.md
+          echo '<!-- BENCHMARK RESULTS START -->' >> .docs/GitHubResults.md
+          echo '' >> .docs/GitHubResults.md
+          echo '## Benchmark Results' >> .docs/GitHubResults.md
+          echo '' >> .docs/GitHubResults.md
+          echo '*Last updated on '"$(date -u)"' UTC*' >> .docs/GitHubResults.md
+          echo '' >> .docs/GitHubResults.md
 
           found=false
-          for report in docs/*-report-github.md; do
+          for report in .docs/data/*-report-github.md; do
             if [ -f "$report" ]; then
-              echo "Including $report into README.md"
-              cat "$report" >> README.md
+              echo "Including $report into .docs/GitHubResults.md"
+              cat "$report" >> .docs/GitHubResults.md
               found=true
             fi
           done
           
           # If no files were found, print a message
           if [ "$found" = false ]; then
-            echo "No benchmark markdown report found." >> README.md
+            echo "No benchmark markdown report found." >> .docs/GitHubResults.md
           fi
 
           # Include the barplot image
-          if ls docs/*-barplot.png 1> /dev/null 2>&1; then
-            for img in docs/*-barplot.png; do
-              echo "### Performance Barplot" >> README.md
-              echo "![Benchmark Barplot]($img)" >> README.md
-              echo '' >> README.md
+          if ls .docs/data/*-barplot.png 1> /dev/null 2>&1; then
+            for img in .docs/data/*-barplot.png; do
+              echo "### Performance Barplot" >> .docs/GitHubResults.md
+              echo "![Benchmark Barplot]($img)" >> .docs/GitHubResults.md
+              echo '' >> .docs/GitHubResults.md
             done
           else
-            echo "No barplot image found." >> README.md
+            echo "No barplot image found." >> .docs/GitHubResults.md
           fi
 
           # Include the boxplot image
-          if ls docs/*-boxplot.png 1> /dev/null 2>&1; then
-            for img in docs/*-boxplot.png; do
-              echo "### Performance Boxplot" >> README.md
-              echo "![Benchmark Boxplot]($img)" >> README.md
-              echo '' >> README.md
+          if ls .docs/data/*-boxplot.png 1> /dev/null 2>&1; then
+            for img in .docs/data/*-boxplot.png; do
+              echo "### Performance Boxplot" >> .docs/GitHubResults.md
+              echo "![Benchmark Boxplot]($img)" >> .docs/GitHubResults.md
+              echo '' >> .docs/GitHubResults.md
             done
           else
-            echo "No boxplot image found." >> README.md
+            echo "No boxplot image found." >> .docs/GitHubResults.md
           fi
 
-          echo '<!-- BENCHMARK RESULTS END -->' >> README.md
+          echo '<!-- BENCHMARK RESULTS END -->' >> .docs/GitHubResults.md
         
         
         
@@ -131,8 +131,8 @@ jobs:
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/* -f
-          git add README.md
+          git add .docs/data/* -f
+          git add .docs/GitHubResults.md
           git commit -m "Update benchmark results in README"
           git push
         env:

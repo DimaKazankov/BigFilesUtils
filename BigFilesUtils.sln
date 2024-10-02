@@ -8,6 +8,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileAlgorithms", "src\FileA
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{7CC4E75B-E489-4B50-A8D5-164B3BA5A091}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".docs", ".docs", "{113E31AB-0F88-4BC6-8C97-5F99347DB1BC}"
+	ProjectSection(SolutionItems) = preProject
+		.docs\GitHubResults.md = .docs\GitHubResults.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
