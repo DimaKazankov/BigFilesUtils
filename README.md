@@ -3,6 +3,30 @@
 ## Requirements
 For more detailed information, please refer to the following [documentation](.docs/Requirements.md):
 
+## Decision way
+
+Here’s an improved version of the translation with enhanced clarity and flow:
+
+The test task turned out to be surprisingly interesting. I've wanted to work with BenchmarkDotNet for a long time, and this opportunity allowed me to dive into the framework.
+
+Regarding the task, a few challenges became immediately clear:
+- The code will be tested on files as large as 100GB. Even after clearing as much space as possible from my hard drive, I wouldn't have enough storage to test my solution under those conditions. So, what can I do? I decided to implement multiple algorithm variations.
+- Let's assume I get these algorithms working. Without the proper infrastructure to capture and analyze performance results, it would be difficult to determine which algorithm performs best. To complicate matters further, the code will eventually be run in different environments, and conclusions drawn from smaller files (less than 10GB) may not hold true for 100GB files. That's why I developed code that can be easily executed to capture results in other environments. I’ve included instructions for this as well.
+
+These considerations guided me toward the solution I implemented.
+
+I understand that I could have focused on just one algorithm without making modifications for performance.
+
+I realize I could have concentrated on refining that single algorithm and improving its efficiency.
+
+Had I focused solely on one, the algorithm could have been more performant, and the code quality might have been higher.
+
+
+However, given the limited time, I chose to build a solution that makes it easy to evaluate which algorithm performs best. This also allows for new algorithms to be added and tested effortlessly.
+
+Regards,
+Dima
+
 ## Introduction
 
 This project implements various algorithms for generating and sorting large files. It's designed to handle files of different sizes efficiently, using various techniques such as buffering, parallelization, and memory-mapped files.

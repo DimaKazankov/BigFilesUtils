@@ -1,5 +1,6 @@
 ﻿using System.IO.MemoryMappedFiles;
 using System.Text;
+using System.Text.RegularExpressions;
 using FileAlgorithms.Sorter.Algorithms.Memory;
 
 namespace FileAlgorithms.Sorter.Algorithms.IO;
@@ -8,6 +9,10 @@ public class ChunkedMemoryMappedFileSorter(ISorter sorter) : IFileSorter
 {
     private const int ChunkSize = 100 * 1024 * 1024; // 100 MB chunks
     private const int BufferSize = 4096; // 4 KB buffer for reading
+
+    // Pre-compiled regex to remove BOM from the start of a line
+    private static readonly Regex BomRegex = new(@"^(?:\uFEFF|ï»¿|Ã¯Â»Â¿)+", RegexOptions.Compiled);
+
 
     public async Task SortFileAsync(string inputFilePath, string outputFilePath)
     {
@@ -28,7 +33,7 @@ public class ChunkedMemoryMappedFileSorter(ISorter sorter) : IFileSorter
             sorter.Sort(lines);
 
             var tempFile = Path.GetTempFileName();
-            await File.WriteAllLinesAsync(tempFile, lines);
+            await File.WriteAllLinesAsync(tempFile, lines, Encoding.UTF8);
             sortedChunks.Add(tempFile);
         }
 
@@ -56,7 +61,9 @@ public class ChunkedMemoryMappedFileSorter(ISorter sorter) : IFileSorter
             {
                 if (buffer[i] == '\n')
                 {
-                    yield return stringBuilder.ToString();
+                    var line = stringBuilder.ToString();
+                    line = CleanLine(line);
+                    yield return line;
                     stringBuilder.Clear();
                 }
                 else if (buffer[i] != '\r')
@@ -70,9 +77,13 @@ public class ChunkedMemoryMappedFileSorter(ISorter sorter) : IFileSorter
 
         if (stringBuilder.Length > 0)
         {
-            yield return stringBuilder.ToString();
+            var finalLine = stringBuilder.ToString();
+            finalLine = CleanLine(finalLine);
+            yield return finalLine;
         }
     }
+
+    private string CleanLine(string line) => BomRegex.Replace(line, string.Empty);
 
     private async Task MergeSortedChunksAsync(List<string> chunkFiles, string outputFilePath)
     {

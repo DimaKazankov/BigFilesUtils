@@ -1,3 +1,4 @@
+using System.Text;
 using FileAlgorithms.Sorter;
 using FileAlgorithms.Sorter.Algorithms.Memory;
 
@@ -105,11 +106,11 @@ public class FileSorterTests : IDisposable
         using (var reader = new StreamReader(_outputPath))
         {
             string? previousLine = null;
-            lineCount = 0;
+            var sortedLineCount = 0;
 
             while (await reader.ReadLineAsync() is { } currentLine)
             {
-                lineCount++;
+                sortedLineCount++;
                 if (previousLine != null)
                 {
                     var prevParts = previousLine.Split(". ", 2);
@@ -131,7 +132,55 @@ public class FileSorterTests : IDisposable
                 previousLine = currentLine;
             }
 
-            Assert.Equal(1_000_000, lineCount);
+            Assert.Equal(1_000_000, sortedLineCount);
         }
+    }
+
+    [Theory]
+    [InlineData(SorterMethod.ExternalMerge, typeof(QuickSorter))]
+    [InlineData(SorterMethod.KWayMerge, typeof(QuickSorter))]
+    [InlineData(SorterMethod.Parallel, typeof(QuickSorter))]
+    [InlineData(SorterMethod.MemoryMapped, typeof(QuickSorter))]
+    [InlineData(SorterMethod.ChunkedMemoryMapped, typeof(QuickSorter))]
+    [InlineData(SorterMethod.ExternalMerge, typeof(DefaultSorter))]
+    [InlineData(SorterMethod.KWayMerge, typeof(DefaultSorter))]
+    [InlineData(SorterMethod.Parallel, typeof(DefaultSorter))]
+    [InlineData(SorterMethod.MemoryMapped, typeof(DefaultSorter))]
+    [InlineData(SorterMethod.ChunkedMemoryMapped, typeof(DefaultSorter))]
+    public async Task SortFile_IgnoresBOM(SorterMethod sorterMethod, Type sorterType)
+    {
+        // Arrange
+        var inputLines = new[]
+        {
+            "415. Apple",
+            "30432. Something something something",
+            "1. Apple",
+            "32. Cherry is the best",
+            "2. Banana is yellow"
+        };
+
+        // Write lines with UTF8 encoding (includes BOM)
+        await File.WriteAllLinesAsync(_inputPath, inputLines, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+
+        var sorter = FileSorterFactory.GetFileSorter(
+            sorterMethod,
+            (ISorter)Activator.CreateInstance(sorterType)!
+        );
+
+        // Act
+        await sorter.SortFileAsync(_inputPath, _outputPath);
+
+        // Assert
+        var sortedLines = await File.ReadAllLinesAsync(_outputPath);
+        var expectedLines = new[]
+        {
+            "1. Apple",
+            "415. Apple",
+            "2. Banana is yellow",
+            "32. Cherry is the best",
+            "30432. Something something something"
+        };
+
+        Assert.Equal(expectedLines, sortedLines);
     }
 }
