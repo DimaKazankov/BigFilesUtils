@@ -1,4 +1,4 @@
-name: Benchmark Report
+name: Quick Benchmark Report
 
 permissions:
   contents: write
@@ -8,7 +8,7 @@ on:
     branches:
       - "*"
     paths-ignore:
-      - 'README.md'
+      - '.docs/GitHubResults.md'
       - 'docs/**'
   workflow_dispatch:  # Allow manual triggering of the workflow
 
@@ -49,61 +49,90 @@ jobs:
 
       # Publish the project
       - name: Publish
-        run: dotnet publish -c Release --verbosity normal -o ./publish/
-
-      # Run Benchmarks
-      - name: Run Benchmarks
-        run: dotnet "./publish/BigFilesUtils.dll" --benchmark
-
-      # Clean docs directory
-      - name: Clean docs directory
         run: |
-          rm -rf docs/*
-          mkdir -p docs/
+          dotnet publish -c Release --verbosity normal -o ./publish/
+
+      # Clean docs data directory
+      - name: Clean docs data directory
+        run: |
+          rm -rf .docs/data/*
+          mkdir -p .docs/data/
+          
+      - name: Run Benchmarks
+        run: |
+          dotnet "./publish/FileAlgorithms.Benchmark.dll" --filter "*FileGeneratorBenchmark*" --job short
+          dotnet "./publish/FileAlgorithms.Benchmark.dll" --filter "*" --job short
 
       # Move benchmark results
       - name: Move benchmark results
         run: |
-          mv BenchmarkDotNet.Artifacts/results/*-report-github.md docs/ || echo "No GitHub markdown report found!"
-          mv BenchmarkDotNet.Artifacts/results/*.png docs/ || echo "No PNG files found!"
-          mv BenchmarkDotNet.Artifacts/results/*.csv docs/ || echo "No CSV report found!"
-          mv BenchmarkDotNet.Artifacts/results/*.html docs/ || echo "No HTML report found!"
-
-      # Update README.md with benchmark results
-      - name: Update README.md
-        run: |
-          # Remove existing benchmark results from README.md
-          sed -i '/<!-- FILE_GENERATION_RESULTS_START -->/,/<!-- FILE_GENERATION_RESULTS_END -->/d' README.md
-          sed -i '/<!-- FILE_SORTING_RESULTS_START -->/,/<!-- FILE_SORTING_RESULTS_END -->/d' README.md
-          
-          # Add new benchmark results to README.md
-          echo '<!-- FILE_GENERATION_RESULTS_START -->' >> README.md
-          echo '### File Generation Benchmarks' >> README.md
-          echo '' >> README.md
-          cat docs/*FileGeneratorBenchmark-report-github.md >> README.md
-          echo '' >> README.md
-          echo '<!-- FILE_GENERATION_RESULTS_END -->' >> README.md
-          
-          echo '<!-- FILE_SORTING_RESULTS_START -->' >> README.md
-          echo '### File Sorting Benchmarks' >> README.md
-          echo '' >> README.md
-          cat docs/*FileSorterBenchmark-report-github.md >> README.md
-          echo '' >> README.md
-          echo '<!-- FILE_SORTING_RESULTS_END -->' >> README.md
-          
-          # Add images
-          for img in docs/*.png; do
-            echo "![Benchmark Chart]($img)" >> README.md
-            echo '' >> README.md
+          find BenchmarkDotNet.Artifacts/results/* -type f | while IFS= read -r f; do
+            if [[ "$f" == *-report-github.md || "$f" == *-barplot.png || "$f" == *-boxplot.png ]]; then
+              mv "$f" .docs/data/
+            fi
           done
+          rm -rf BenchmarkDotNet.Artifacts/
 
-      # Commit and push changes
+      # Update .docs/GitHubResults.md with benchmark results
+      - name: Update .docs/GitHubResults.md
+        run: |
+          # Remove existing benchmark results from .docs/GitHubResults.md
+          sed -i '/<!-- BENCHMARK RESULTS START -->/,/<!-- BENCHMARK RESULTS END -->/d' .docs/GitHubResults.md
+          # Add new benchmark results to .docs/GitHubResults.md
+          echo '<!-- BENCHMARK RESULTS START -->' >> .docs/GitHubResults.md
+          echo '' >> .docs/GitHubResults.md
+          echo '## Benchmark Results' >> .docs/GitHubResults.md
+          echo '' >> .docs/GitHubResults.md
+          echo '*Last updated on '"$(date -u)"' UTC*' >> .docs/GitHubResults.md
+          echo '' >> .docs/GitHubResults.md
+
+          found=false
+          for report in .docs/data/*-report-github.md; do
+            if [ -f "$report" ]; then
+              echo "Including $report into .docs/GitHubResults.md"
+              cat "$report" >> .docs/GitHubResults.md
+              found=true
+            fi
+          done
+          
+          # If no files were found, print a message
+          if [ "$found" = false ]; then
+            echo "No benchmark markdown report found." >> .docs/GitHubResults.md
+          fi
+
+          # Include the barplot image
+          if ls .docs/data/*-barplot.png 1> /dev/null 2>&1; then
+            for img in .docs/data/*-barplot.png; do
+              echo "### Performance Barplot" >> .docs/GitHubResults.md
+              echo "![Benchmark Barplot]($img)" >> .docs/GitHubResults.md
+              echo '' >> .docs/GitHubResults.md
+            done
+          else
+            echo "No barplot image found." >> .docs/GitHubResults.md
+          fi
+
+          # Include the boxplot image
+          if ls .docs/data/*-boxplot.png 1> /dev/null 2>&1; then
+            for img in .docs/data/*-boxplot.png; do
+              echo "### Performance Boxplot" >> .docs/GitHubResults.md
+              echo "![Benchmark Boxplot]($img)" >> .docs/GitHubResults.md
+              echo '' >> .docs/GitHubResults.md
+            done
+          else
+            echo "No boxplot image found." >> .docs/GitHubResults.md
+          fi
+
+          echo '<!-- BENCHMARK RESULTS END -->' >> .docs/GitHubResults.md
+        
+        
+        
+        # Commit and push changes
       - name: Commit and push changes
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/*
-          git add README.md
+          git add .docs/data/* -f
+          git add .docs/GitHubResults.md
           git commit -m "Update benchmark results in README"
           git push
         env:

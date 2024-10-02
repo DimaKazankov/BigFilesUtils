@@ -1,294 +1,209 @@
-# Big files utils
+# File Algorithms Project
 
-## Benchmark Results
+## Requirements
+For more detailed information, please refer to the following [documentation](.docs/Requirements.md):
 
+## Decision way
 
-<!-- BENCHMARK RESULTS START -->
+Here’s an improved version of the translation with enhanced clarity and flow:
 
-## Benchmark Results
+The test task turned out to be surprisingly interesting. I've wanted to work with BenchmarkDotNet for a long time, and this opportunity allowed me to dive into the framework.
 
-*Last updated on Sun Sep 29 09:15:44 UTC 2024 UTC*
+Regarding the task, a few challenges became immediately clear:
+- The code will be tested on files as large as 100GB. Even after clearing as much space as possible from my hard drive, I wouldn't have enough storage to test my solution under those conditions. So, what can I do? I decided to implement multiple algorithm variations.
+- Let's assume I get these algorithms working. Without the proper infrastructure to capture and analyze performance results, it would be difficult to determine which algorithm performs best. To complicate matters further, the code will eventually be run in different environments, and conclusions drawn from smaller files (less than 10GB) may not hold true for 100GB files. That's why I developed code that can be easily executed to capture results in other environments. I’ve included instructions for this as well.
 
-```
+These considerations guided me toward the solution I implemented.
 
-BenchmarkDotNet v0.14.0, Ubuntu 22.04.5 LTS (Jammy Jellyfish)
-AMD EPYC 7763, 1 CPU, 2 logical cores and 1 physical core
-.NET SDK 8.0.402
-  [Host]     : .NET 8.0.8 (8.0.824.36612), X64 RyuJIT AVX2
-  Job-BZTBEP : .NET 8.0.8 (8.0.824.36612), X64 RyuJIT AVX2
+I understand that I could have focused on just one algorithm without making modifications for performance.
 
-Server=True  InvocationCount=3  IterationCount=3  
-LaunchCount=5  UnrollFactor=1  WarmupCount=2  
+I realize I could have concentrated on refining that single algorithm and improving its efficiency.
 
-```
-| Method       | FileSizeInBytes | Generator    | FileSize | Mean     | Error    | StdDev   | StdErr   | Median   | Min      | Max      | Q1       | Q3       | Op/s      | Rank | Allocated |
-|------------- |---------------- |------------- |--------- |---------:|---------:|---------:|---------:|---------:|---------:|---------:|---------:|---------:|----------:|-----:|----------:|
-| GenerateFile | 1.00 GB         | Original     | ?        | 0.0020 s | 0.0010 s | 0.0009 s | 0.0002 s | 0.0019 s | 0.0011 s | 0.0036 s | 0.0012 s | 0.0027 s |     488.3 |    5 |   1.59 MB |
-| GenerateFile | 1.00 GB         | Buffered     | ?        | 0.0020 s | 0.0007 s | 0.0007 s | 0.0002 s | 0.0018 s | 0.0010 s | 0.0036 s | 0.0015 s | 0.0024 s |     508.3 |    5 |   2.41 MB |
-| GenerateFile | 1.00 GB         | Parallel     | ?        | 0.0000 s | 0.0000 s | 0.0000 s | 0.0000 s | 0.0000 s | 0.0000 s | 0.0001 s | 0.0000 s | 0.0000 s |  36,554.7 |    2 |   0.34 MB |
-| GenerateFile | 1.00 GB         | MemoryMapped | ?        | 0.0000 s | 0.0000 s | 0.0000 s | 0.0000 s | 0.0000 s | 0.0000 s | 0.0001 s | 0.0000 s | 0.0000 s | 104,350.6 |    1 |   0.93 MB |
-| GenerateFile | 100.00 MB       | Original     | ?        | 0.0021 s | 0.0007 s | 0.0006 s | 0.0002 s | 0.0019 s | 0.0012 s | 0.0033 s | 0.0015 s | 0.0026 s |     484.0 |    5 |   1.58 MB |
-| GenerateFile | 100.00 MB       | Buffered     | ?        | 0.0021 s | 0.0019 s | 0.0018 s | 0.0005 s | 0.0017 s | 0.0009 s | 0.0081 s | 0.0010 s | 0.0021 s |     483.9 |    5 |   2.84 MB |
-| GenerateFile | 100.00 MB       | Parallel     | ?        | 0.0000 s | 0.0000 s | 0.0000 s | 0.0000 s | 0.0000 s | 0.0000 s | 0.0001 s | 0.0000 s | 0.0000 s |  41,002.0 |    2 |   0.38 MB |
-| GenerateFile | 100.00 MB       | MemoryMapped | ?        | 0.0000 s | 0.0000 s | 0.0000 s | 0.0000 s | 0.0000 s | 0.0000 s | 0.0001 s | 0.0000 s | 0.0000 s |  70,899.7 |    1 |   0.02 MB |
-| GenerateFile | 500.00 MB       | Original     | ?        | 0.0024 s | 0.0011 s | 0.0010 s | 0.0003 s | 0.0019 s | 0.0011 s | 0.0043 s | 0.0018 s | 0.0027 s |     423.4 |    6 |   2.23 MB |
-| GenerateFile | 500.00 MB       | Buffered     | ?        | 0.0016 s | 0.0005 s | 0.0005 s | 0.0001 s | 0.0016 s | 0.0010 s | 0.0027 s | 0.0012 s | 0.0020 s |     615.0 |    5 |    1.3 MB |
-| GenerateFile | 500.00 MB       | Parallel     | ?        | 0.0000 s | 0.0001 s | 0.0001 s | 0.0000 s | 0.0000 s | 0.0000 s | 0.0002 s | 0.0000 s | 0.0000 s |  28,521.6 |    4 |   0.75 MB |
-| GenerateFile | 500.00 MB       | MemoryMapped | ?        | 0.0000 s | 0.0001 s | 0.0001 s | 0.0000 s | 0.0000 s | 0.0000 s | 0.0003 s | 0.0000 s | 0.0000 s |  32,553.9 |    3 |   0.84 MB |
+Had I focused solely on one, the algorithm could have been more performant, and the code quality might have been higher.
 
-### Performance Barplot
-![Benchmark Barplot](docs/BigFilesUtils.Benchmark.FileGeneratorBenchmark-barplot.png)
 
-### Measurement Overhead Plot
-![Measurement Overhead Plot](docs/*-measurement.png)
+However, given the limited time, I chose to build a solution that makes it easy to evaluate which algorithm performs best. This also allows for new algorithms to be added and tested effortlessly.
 
-### Distribution Plot
-![Distribution Plot](docs/*-distribution.png)
+Regards,
+Dima
 
-<!-- BENCHMARK RESULTS END -->
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=ExternalMerge-cummean.png)
+## Introduction
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=ExternalMerge-density.png)
+This project implements various algorithms for generating and sorting large files. It's designed to handle files of different sizes efficiently, using various techniques such as buffering, parallelization, and memory-mapped files.
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=ExternalMerge-timeline.png)
+The project also includes benchmarking capabilities to measure and compare the performance of different algorithms.
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=ExternalMerge-timelineSmooth.png)
+## Project Structure
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=KWayMerge-cummean.png)
+The project is organized into several namespaces:
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=KWayMerge-density.png)
+- `FileAlgorithms.Generator`: Contains file generation algorithms
+- `FileAlgorithms.Sorter`: Contains file sorting algorithms
+- `FileAlgorithms.Benchmark`: Contains benchmarking code
+- `FileAlgorithms.Tests`: Contains unit tests
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=KWayMerge-timeline.png)
+## Benchmarking results
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=KWayMerge-timelineSmooth.png)
+### GitHub benchmark results are regenerating on every pipeline run: [GitHub benchmark results](.docs/GitHubResults.md)
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=Parallel-cummean.png)
+#### System Specifications
+- AMD EPYC 7763, 1 CPU, 2 logical cores and 1 physical core
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=Parallel-density.png)
+#### File Generation Algorithms
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=Parallel-timeline.png)
+##### 1 GB Files
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=Parallel-timelineSmooth.png)
+| Method | Performance | Memory Allocation | Notes |
+|--------|-------------|-------------------|-------|
+| Parallel | 5.6-5.8s (fastest) | 4100 MB (lowest) | Utilizes multi-threading effectively |
+| Buffered | 7.4-8.2s | 5125 MB | Efficient use of StringBuilder for buffering |
+| Original | 8.4-8.9s | 5992 MB | Simple implementation, but less efficient |
+| MemoryMapped | 9.9-10.2s (slowest) | 8115 MB (highest) | Unexpected slower performance for large files |
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=200.00 MB&Sorter=ExternalMerge-cummean.png)
+##### 100 MB Files
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=200.00 MB&Sorter=ExternalMerge-density.png)
+| Method | Performance | Notes |
+|--------|-------------|-------|
+| Parallel | 0.54-0.55s (fastest) | Consistent performance across file sizes |
+| Buffered | 0.74-0.76s | Maintains efficiency for smaller files |
+| Original | 0.82-0.84s | Performance gap narrows for smaller files |
+| MemoryMapped | 0.89-0.90s (slowest) | Performance improves relative to other methods for smaller files |
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=200.00 MB&Sorter=ExternalMerge-timeline.png)
+#### File Sorting Algorithms
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=200.00 MB&Sorter=ExternalMerge-timelineSmooth.png)
+##### 100 MB Files
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=200.00 MB&Sorter=KWayMerge-cummean.png)
+| Method | Performance | Notes |
+|--------|-------------|-------|
+| MemoryMapped (Default) | 17.4-17.6s (fastest) | Efficient for this file size, lower memory allocation |
+| ExternalMerge (Default) | 18.3-18.5s | Consistently good performance |
+| Parallel (Default) | 18.6-19.2s | Fast with Default sorter |
+| Parallel (Quick) | 20.1-20.4s | Slower with Quick sorter |
+| KWayMerge (Default) | 18.9-19.2s | Similar to ExternalMerge, slightly slower |
+| KWayMerge (Quick) | 20.5-21.5s | Slower with Quick sorter |
+| ChunkedMemoryMapped | 20.5-22.4s (slowest) | Overhead of chunking might not be beneficial for this file size |
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=200.00 MB&Sorter=KWayMerge-density.png)
+##### 50 MB Files
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=200.00 MB&Sorter=KWayMerge-timeline.png)
+| Method | Performance | Notes |
+|--------|-------------|-------|
+| ChunkedMemoryMapped (Default) | 7.1-7.2s (fastest) | Performs better on smaller files, lowest memory allocation |
+| MemoryMapped (Default) | 8.1-8.2s | Consistent performance across file sizes |
+| ExternalMerge, KWayMerge, Parallel | 8.6-8.9s | Less differentiation for smaller files |
+| Quick sorter variants | Generally slower | Consistently underperforms across all methods |
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=200.00 MB&Sorter=KWayMerge-timelineSmooth.png)
+#### Key Observations
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=200.00 MB&Sorter=Parallel-cummean.png)
+1. **Parallel processing** is most effective for file generation, especially for larger files.
+2. **Memory-mapped** approaches are more efficient for sorting, particularly for smaller files.
+3. The **Default sorter** generally outperforms the **Quick sorter** across all methods.
+4. **ChunkedMemoryMapped** shows interesting behavior:
+   - Poor performance for larger files (100MB)
+   - Best performance for smaller files (50MB)
+5. The choice between **ExternalMerge**, **KWayMerge**, and **Parallel** sorting depends on the specific file size and system characteristics.
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=200.00 MB&Sorter=Parallel-density.png)
+#### Conclusions
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=200.00 MB&Sorter=Parallel-timeline.png)
+- For file generation, the Parallel method is superior, especially for large files.
+- For sorting, the choice of method depends on file size:
+   - For larger files (100MB), MemoryMapped with Default sorter is most efficient.
+   - For smaller files (50MB), ChunkedMemoryMapped with Default sorter performs best.
+- The Default sorter consistently outperforms the Quick sorter, suggesting it might be better optimized for the given data characteristics.
+- The effectiveness of different methods varies with file size, highlighting the importance of benchmarking for specific use cases.
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=200.00 MB&Sorter=Parallel-timelineSmooth.png)
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=100.00 MB&Sorter=ExternalMerge-density.png)
+### Manual run on my machine: [My local machine benchmark results](.docs/MyLocalMachineResults.md)
+#### File Generation and Sorting Benchmark Analysis
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=100.00 MB&Sorter=ExternalMerge-facetDensity.png)
+##### System Specifications
+- RAM: 32GB
+- Processor: Intel(R) Core(TM) i7-6820HQ CPU @ 2.70GHz
+- Cores: 4 Core(s), 8 Logical Processor(s)
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=100.00 MB&Sorter=KWayMerge-density.png)
+#### File Generation Benchmarks
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=100.00 MB&Sorter=KWayMerge-facetDensity.png)
+##### 1 GB Files
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=100.00 MB&Sorter=Parallel-density.png)
+| Method | Performance | Memory Allocation |
+|--------|-------------|-------------------|
+| Parallel | 1.7-1.8s (fastest) | 4.1 GB (lowest) |
+| Buffered | 6.4-7.0s | 5.1 GB |
+| Original | 7.3-7.8s | 5.9 GB |
+| MemoryMapped | 8.3-8.5s | 7.9 GB (highest) |
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=100.00 MB&Sorter=Parallel-facetDensity.png)
+- Parallel generator is significantly faster than other methods.
+- Memory allocation is lowest for Parallel and highest for MemoryMapped.
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=200.00 MB&Sorter=ExternalMerge-density.png)
+##### 100 MB Files
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=200.00 MB&Sorter=ExternalMerge-facetDensity.png)
+| Method | Performance | Memory Allocation |
+|--------|-------------|-------------------|
+| Parallel | 0.2-0.22s (fastest) | 441 MB |
+| Buffered | 0.66-0.7s | 500 MB |
+| Original | 0.71-0.74s | 572 MB |
+| MemoryMapped | 0.82-0.89s | 772 MB |
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=200.00 MB&Sorter=KWayMerge-density.png)
+- Performance ranking is similar to 1 GB files, but with scaled-down memory allocation.
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=200.00 MB&Sorter=KWayMerge-facetDensity.png)
+#### File Sorting Benchmarks
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=200.00 MB&Sorter=Parallel-density.png)
+##### 100 MB Files
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=200.00 MB&Sorter=Parallel-facetDensity.png)
+- Performance range: 26-38 seconds for most methods
+- MemoryMapped with Default sorter: Generally fastest (26-27s)
+- Quick sorter: Often slower than the Default sorter
+- Parallel sorting: No significant improvements, likely due to overhead
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-cummean.png)
+##### 50 MB Files
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-density.png)
+- Sorting times: 11-15 seconds for most methods
+- ChunkedMemoryMapped and MemoryMapped: Generally faster (11-13s)
+- Quick sorter: Often slower than the Default sorter
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-facetDensity.png)
+#### General Observations
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-facetTimeline.png)
+1. Parallel generator: Extremely efficient for file generation, but advantage doesn't translate to sorting.
+2. MemoryMapped methods: Perform well for sorting, especially with smaller file sizes.
+3. Quick sorter: Often performs slower than the Default sorter, possibly due to data nature or implementation details.
+4. .NET 8.0 vs default runtime: Generally small performance difference, with some exceptions.
+5. Memory allocation: Varies significantly between methods, with Parallel and MemoryMapped often using more memory.
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-facetTimelineSmooth.png)
+#### Analysis
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-barplot.png)
+- The Parallel generator's efficiency in file generation is likely due to full utilization of multiple cores.
+- High RAM allows for efficient use of memory-mapped files, explaining their good sorting performance.
+- For very large files, the advantage of memory-mapped methods might diminish due to increased reliance on disk I/O.
 
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-boxplot.png)
+#### Conclusions
 
-<!-- FILE_GENERATION_RESULTS_START -->
-### File Generation Benchmarks
+- For fast file generation: Parallel method is superior.
+- For sorting: MemoryMapped or ChunkedMemoryMapped methods offer best performance, especially for smaller files.
+- Default sorter generally outperforms Quick sorter, which warrants further investigation.
 
-```
 
-BenchmarkDotNet v0.14.0, Ubuntu 22.04.5 LTS (Jammy Jellyfish)
-AMD EPYC 7763, 1 CPU, 2 logical cores and 1 physical core
-.NET SDK 8.0.402
-  [Host]     : .NET 8.0.8 (8.0.824.36612), X64 RyuJIT AVX2
-  DefaultJob : .NET 8.0.8 (8.0.824.36612), X64 RyuJIT AVX2
+## Features
 
+- Multiple file generation algorithms
+- Multiple file sorting algorithms
+- Benchmarking capabilities
+- Comprehensive unit tests
 
-```
-| Method       | FileSizeInBytes | Generator    | FileSize | Mean      | Error    | StdDev   | StdErr   | Median    | Min       | Q1        | Q3        | Max       | Op/s   | Rank | Gen0        | Gen1        | Gen2        | Allocated  |
-|------------- |---------------- |------------- |--------- |----------:|---------:|---------:|---------:|----------:|----------:|----------:|----------:|----------:|-------:|-----:|------------:|------------:|------------:|-----------:|
-| **GenerateFile** | **1.00 GB**         | **Original**     | **?**        |  **9.3875 s** | **0.0311 s** | **0.0291 s** | **0.0075 s** |  **9.3965 s** |  **9.3402 s** |  **9.3687 s** |  **9.4085 s** |  **9.4259 s** | **0.1065** |    **4** |  **75000.0000** |           **-** |           **-** | **5992.32 MB** |
-| **GenerateFile** | **1.00 GB**         | **Buffered**     | **?**        |  **8.3006 s** | **0.0822 s** | **0.0769 s** | **0.0198 s** |  **8.3375 s** |  **8.1421 s** |  **8.2977 s** |  **8.3454 s** |  **8.4001 s** | **0.1205** |    **3** | **682000.0000** | **682000.0000** | **682000.0000** | **5122.43 MB** |
-| **GenerateFile** | **1.00 GB**         | **Parallel**     | **?**        | **10.8152 s** | **0.2519 s** | **0.7429 s** | **0.0743 s** | **10.8984 s** |  **8.9928 s** | **10.4498 s** | **11.3700 s** | **12.1976 s** | **0.0925** |    **5** |  **43000.0000** |  **42000.0000** |   **5000.0000** | **3696.98 MB** |
-| **GenerateFile** | **1.00 GB**         | **MemoryMapped** | **?**        | **10.3274 s** | **0.1002 s** | **0.0888 s** | **0.0237 s** | **10.3387 s** | **10.1462 s** | **10.2851 s** | **10.3574 s** | **10.4892 s** | **0.0968** |    **5** | **101000.0000** |           **-** |           **-** | **8115.48 MB** |
-| **GenerateFile** | **100.00 MB**       | **Original**     | **?**        |  **0.8353 s** | **0.0161 s** | **0.0191 s** | **0.0042 s** |  **0.8447 s** |  **0.7993 s** |  **0.8416 s** |  **0.8462 s** |  **0.8520 s** | **1.1972** |    **2** |   **7000.0000** |           **-** |           **-** |   **585.5 MB** |
-| **GenerateFile** | **100.00 MB**       | **Buffered**     | **?**        |  **0.7759 s** | **0.0153 s** | **0.0260 s** | **0.0043 s** |  **0.7823 s** |  **0.7363 s** |  **0.7522 s** |  **0.7984 s** |  **0.8426 s** | **1.2889** |    **1** |  **66000.0000** |  **66000.0000** |  **66000.0000** |  **500.77 MB** |
-| **GenerateFile** | **100.00 MB**       | **Parallel**     | **?**        |  **0.8680 s** | **0.0430 s** | **0.1267 s** | **0.0127 s** |  **0.8096 s** |  **0.7297 s** |  **0.7838 s** |  **0.9641 s** |  **1.2263 s** | **1.1520** |    **2** |   **4000.0000** |   **3000.0000** |   **1000.0000** |  **316.26 MB** |
-| **GenerateFile** | **100.00 MB**       | **MemoryMapped** | **?**        |  **0.8954 s** | **0.0072 s** | **0.0068 s** | **0.0018 s** |  **0.8946 s** |  **0.8842 s** |  **0.8906 s** |  **0.8989 s** |  **0.9061 s** | **1.1168** |    **2** |   **9000.0000** |           **-** |           **-** |  **792.53 MB** |
+## Documentation
 
-<!-- FILE_GENERATION_RESULTS_END -->
-<!-- FILE_SORTING_RESULTS_START -->
-### File Sorting Benchmarks
+For more detailed information, please refer to the following documentation:
 
-```
+- [File Generation](.docs/File-Generation.md)
+- [File Sorting](.docs/File-Sorting.md)
+- [Benchmarking](.docs/Benchmarking.md)
+- [Running the Project](.docs/Running-the-Project.md)
 
-BenchmarkDotNet v0.14.0, Ubuntu 22.04.5 LTS (Jammy Jellyfish)
-AMD EPYC 7763, 1 CPU, 2 logical cores and 1 physical core
-.NET SDK 8.0.402
-  [Host]     : .NET 8.0.8 (8.0.824.36612), X64 RyuJIT AVX2
-  DefaultJob : .NET 8.0.8 (8.0.824.36612), X64 RyuJIT AVX2
+## Getting Started
 
+1. Clone the repository
+2. Navigate to the project directory
+3. Run `dotnet build` to build the project
+4. Run `dotnet run -- --help` for usage instructions
 
-```
-| Method   | FileSizeInBytes | Sorter        | Generator | FileSize | Mean     | Error    | StdDev   | StdErr   | Min      | Q1       | Median   | Q3       | Max      | Op/s   | Rank | Gen0        | Gen1       | Gen2      | Allocated   |
-|--------- |---------------- |-------------- |---------- |--------- |---------:|---------:|---------:|---------:|---------:|---------:|---------:|---------:|---------:|-------:|-----:|------------:|-----------:|----------:|------------:|
-| **SortFile** | **100.00 MB**       | **ExternalMerge** | **?**         | **?**        | **18.805 s** | **0.2398 s** | **0.2243 s** | **0.0579 s** | **18.426 s** | **18.691 s** | **18.854 s** | **18.952 s** | **19.165 s** | **0.0532** |    **3** | **255000.0000** | **11000.0000** | **2000.0000** | **20283.26 MB** |
-| **SortFile** | **100.00 MB**       | **KWayMerge**     | **?**         | **?**        | **19.040 s** | **0.3576 s** | **0.3345 s** | **0.0864 s** | **18.461 s** | **18.829 s** | **19.070 s** | **19.216 s** | **19.583 s** | **0.0525** |    **3** | **255000.0000** | **12000.0000** | **3000.0000** | **20226.18 MB** |
-| **SortFile** | **100.00 MB**       | **Parallel**      | **?**         | **?**        | **18.399 s** | **0.0964 s** | **0.0855 s** | **0.0228 s** | **18.204 s** | **18.362 s** | **18.391 s** | **18.458 s** | **18.532 s** | **0.0544** |    **3** | **252000.0000** | **11000.0000** | **2000.0000** | **20087.05 MB** |
-| **SortFile** | **100.00 MB**       | **MemoryMapped**  | **?**         | **?**        | **25.638 s** | **0.1481 s** | **0.1236 s** | **0.0343 s** | **25.407 s** | **25.595 s** | **25.605 s** | **25.688 s** | **25.912 s** | **0.0390** |    **4** | **493000.0000** | **20000.0000** | **3000.0000** | **39292.06 MB** |
-| **SortFile** | **50.00 MB**        | **ExternalMerge** | **?**         | **?**        |  **8.781 s** | **0.0865 s** | **0.0810 s** | **0.0209 s** |  **8.655 s** |  **8.720 s** |  **8.775 s** |  **8.836 s** |  **8.911 s** | **0.1139** |    **1** | **121000.0000** |  **7000.0000** | **2000.0000** |   **9599.3 MB** |
-| **SortFile** | **50.00 MB**        | **KWayMerge**     | **?**         | **?**        |  **8.613 s** | **0.1511 s** | **0.1413 s** | **0.0365 s** |  **8.376 s** |  **8.529 s** |  **8.573 s** |  **8.728 s** |  **8.816 s** | **0.1161** |    **1** | **121000.0000** |  **7000.0000** | **2000.0000** |  **9587.83 MB** |
-| **SortFile** | **50.00 MB**        | **Parallel**      | **?**         | **?**        |  **8.938 s** | **0.1062 s** | **0.0993 s** | **0.0256 s** |  **8.739 s** |  **8.877 s** |  **8.909 s** |  **9.038 s** |  **9.074 s** | **0.1119** |    **1** | **120000.0000** |  **7000.0000** | **2000.0000** |  **9562.14 MB** |
-| **SortFile** | **50.00 MB**        | **MemoryMapped**  | **?**         | **?**        | **12.549 s** | **0.0659 s** | **0.0584 s** | **0.0156 s** | **12.423 s** | **12.513 s** | **12.563 s** | **12.572 s** | **12.663 s** | **0.0797** |    **2** | **234000.0000** | **12000.0000** | **3000.0000** | **18568.08 MB** |
+## Requirements
 
-<!-- FILE_SORTING_RESULTS_END -->
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=ExternalMerge-cummean.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=ExternalMerge-density.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=ExternalMerge-timeline.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=ExternalMerge-timelineSmooth.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=KWayMerge-cummean.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=KWayMerge-density.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=KWayMerge-timeline.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=KWayMerge-timelineSmooth.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=MemoryMapped-cummean.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=MemoryMapped-density.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=MemoryMapped-timeline.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=MemoryMapped-timelineSmooth.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=Parallel-cummean.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=Parallel-density.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=Parallel-timeline.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=100.00 MB&Sorter=Parallel-timelineSmooth.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=50.00 MB&Sorter=ExternalMerge-cummean.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=50.00 MB&Sorter=ExternalMerge-density.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=50.00 MB&Sorter=ExternalMerge-timeline.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=50.00 MB&Sorter=ExternalMerge-timelineSmooth.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=50.00 MB&Sorter=KWayMerge-cummean.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=50.00 MB&Sorter=KWayMerge-density.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=50.00 MB&Sorter=KWayMerge-timeline.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=50.00 MB&Sorter=KWayMerge-timelineSmooth.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=50.00 MB&Sorter=MemoryMapped-cummean.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=50.00 MB&Sorter=MemoryMapped-density.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=50.00 MB&Sorter=MemoryMapped-timeline.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=50.00 MB&Sorter=MemoryMapped-timelineSmooth.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=50.00 MB&Sorter=Parallel-cummean.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=50.00 MB&Sorter=Parallel-density.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=50.00 MB&Sorter=Parallel-timeline.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-DefaultJob FileSizeInBytes=50.00 MB&Sorter=Parallel-timelineSmooth.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=100.00 MB&Sorter=ExternalMerge-density.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=100.00 MB&Sorter=ExternalMerge-facetDensity.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=100.00 MB&Sorter=KWayMerge-density.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=100.00 MB&Sorter=KWayMerge-facetDensity.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=100.00 MB&Sorter=MemoryMapped-density.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=100.00 MB&Sorter=MemoryMapped-facetDensity.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=100.00 MB&Sorter=Parallel-density.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=100.00 MB&Sorter=Parallel-facetDensity.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=50.00 MB&Sorter=ExternalMerge-density.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=50.00 MB&Sorter=ExternalMerge-facetDensity.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=50.00 MB&Sorter=KWayMerge-density.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=50.00 MB&Sorter=KWayMerge-facetDensity.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=50.00 MB&Sorter=MemoryMapped-density.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=50.00 MB&Sorter=MemoryMapped-facetDensity.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=50.00 MB&Sorter=Parallel-density.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-FileSizeInBytes=50.00 MB&Sorter=Parallel-facetDensity.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-cummean.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-density.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-facetDensity.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-facetTimeline.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-SortFile-facetTimelineSmooth.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-barplot.png)
-
-![Benchmark Chart](docs/BigFilesUtils.Benchmark.FileSorterBenchmark-boxplot.png)
-
+- .NET 8.0 or later
